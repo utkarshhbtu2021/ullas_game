@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.blackBorder {
+    border: 2px solid #000;
+    border-radius: 22px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+}
+.mainHome {
+    padding: 40px;
+    background: #fff;
+}
+.mainHome .mainHome__inner {
+    padding: 40px; 
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0px 0px 80px rgba(0, 0, 0, 0.1);
+    background: url('public/images/backgrounds/main-bg.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.mainHome .mainHome__inner.dashboard {
+    background: url('public/images/backgrounds/inner-bg.png');
+}
+.mainHome .mainHome__inner .mainHome__inner-header {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 100px;   
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+}
+.mainHome .mainHome__inner .mainHome__inner-header .container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+.mainHome .mainHome__inner .mainHome__inner-header .container .ullas-logo {
+   margin-right: 30px;
+}
+
+.userSection { 
+    padding: 30px 40px;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 30px;
+    background: #F87018;
+    background: linear-gradient(90deg,rgba(248, 112, 24, 1) 0%, rgba(236, 72, 150, 1) 100%);
+}
+.userSection  .userSection__left h1, .userSection .userSection__left p {
+    text-shadow: 2px 2px 1px rgba(0, 0, 0, 0.3);
+}
