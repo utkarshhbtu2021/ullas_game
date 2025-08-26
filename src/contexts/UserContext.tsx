@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI, handleApiError } from '../services/apiService';
 
 interface User {
   id: string;
   name: string;
-  email: string;
+  userName: string;
+  gender: string;
   age: number;
-  location: string;
-  phoneNumber: string;
+  stateOrUnionTerritory: string;
+  role: string;
+  streak: number;
   createdAt: string;
 }
 
@@ -29,8 +32,7 @@ interface UserContextType {
   user: User | null;
   progress: GameProgress;
   stats: UserStats;
-  login: (email: string, password: string) => boolean;
-  register: (userData: Omit<User, 'id' | 'createdAt'> & { password: string }) => boolean;
+  login: (fullName: string, userName: string) => Promise<boolean>;
   logout: () => void;
   updateProgress: (game: keyof GameProgress, data: Partial<GameProgress[keyof GameProgress]>) => void;
   isAuthenticated: boolean;
@@ -63,8 +65,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem('ullas-user');
     const storedProgress = localStorage.getItem('ullas-progress');
     const storedStats = localStorage.getItem('ullas-stats');
+    const token = localStorage.getItem('ullas-token');
 
-    if (storedUser) {
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     }
     if (storedProgress) {
@@ -75,78 +78,62 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (email: string, password: string): boolean => {
-    // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem('ullas-users') || '[]');
-    const foundUser = users.find((u: any) => u.email === email && u.password === password);
+  const login = async (fullName: string, userName: string): Promise<boolean> => {
+    try {
+      const data = await authAPI.login({ fullName, userName });
 
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      
-      // Load user-specific data
-      const userProgress = localStorage.getItem(`ullas-progress-${foundUser.id}`);
-      const userStats = localStorage.getItem(`ullas-stats-${foundUser.id}`);
-      
-      if (userProgress) {
-        setProgress(JSON.parse(userProgress));
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem('ullas-token', data.data.token);
+        
+        // Store user data
+        const userData = {
+          id: data.data.user._id,
+          name: data.data.user.fullName,
+          userName: data.data.user.userName,
+          gender: data.data.user.gender,
+          age: data.data.user.age,
+          stateOrUnionTerritory: data.data.user.stateOrUnionTerritory,
+          role: data.data.user.role,
+          streak: data.data.user.streak,
+          createdAt: data.data.user.createdAt
+        };
+        setUser(userData);
+        localStorage.setItem('ullas-user', JSON.stringify(userData));
+
+        // Load user-specific progress and stats
+        const userProgress = localStorage.getItem(`ullas-progress-${userData.id}`);
+        const userStats = localStorage.getItem(`ullas-stats-${userData.id}`);
+        
+        if (userProgress) {
+          setProgress(JSON.parse(userProgress));
+          localStorage.setItem('ullas-progress', userProgress);
+        }
+        if (userStats) {
+          setStats(JSON.parse(userStats));
+          localStorage.setItem('ullas-stats', userStats);
+        }
+
+        // Update last login and streak
+        const today = new Date().toDateString();
+        const lastLogin = new Date(stats.lastLoginDate).toDateString();
+        const newStats = {
+          ...stats,
+          lastLoginDate: new Date().toISOString(),
+          streakDays: today !== lastLogin ? stats.streakDays + 1 : stats.streakDays
+        };
+        setStats(newStats);
+        localStorage.setItem('ullas-stats', JSON.stringify(newStats));
+        localStorage.setItem(`ullas-stats-${userData.id}`, JSON.stringify(newStats));
+
+        return true;
+      } else {
+        return false;
       }
-      if (userStats) {
-        setStats(JSON.parse(userStats));
-      }
-
-      // Update last login and streak
-      const today = new Date().toDateString();
-      const lastLogin = new Date(stats.lastLoginDate).toDateString();
-      const newStats = {
-        ...stats,
-        lastLoginDate: new Date().toISOString(),
-        streakDays: today !== lastLogin ? stats.streakDays + 1 : stats.streakDays
-      };
-      setStats(newStats);
-
-      // Store current user and data
-      localStorage.setItem('ullas-user', JSON.stringify(userWithoutPassword));
-      localStorage.setItem('ullas-progress', JSON.stringify(progress));
-      localStorage.setItem('ullas-stats', JSON.stringify(newStats));
-      localStorage.setItem(`ullas-stats-${foundUser.id}`, JSON.stringify(newStats));
-
-      return true;
-    }
-    return false;
-  };
-
-  const register = (userData: Omit<User, 'id' | 'createdAt'> & { password: string }): boolean => {
-    const users = JSON.parse(localStorage.getItem('ullas-users') || '[]');
-    
-    // Check if user already exists
-    if (users.some((u: any) => u.email === userData.email)) {
+    } catch (error) {
+      console.error('Login error:', error);
       return false;
     }
-
-    const newUser = {
-      ...userData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    localStorage.setItem('ullas-users', JSON.stringify(users));
-
-    // Auto-login the new user
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    setProgress(defaultProgress);
-    setStats(defaultStats);
-
-    // Store user data
-    localStorage.setItem('ullas-user', JSON.stringify(userWithoutPassword));
-    localStorage.setItem('ullas-progress', JSON.stringify(defaultProgress));
-    localStorage.setItem('ullas-stats', JSON.stringify(defaultStats));
-    localStorage.setItem(`ullas-progress-${newUser.id}`, JSON.stringify(defaultProgress));
-    localStorage.setItem(`ullas-stats-${newUser.id}`, JSON.stringify(defaultStats));
-
-    return true;
   };
 
   const logout = () => {
@@ -156,6 +143,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('ullas-user');
     localStorage.removeItem('ullas-progress');
     localStorage.removeItem('ullas-stats');
+    localStorage.removeItem('ullas-token');
   };
 
   const updateProgress = (game: keyof GameProgress, data: Partial<GameProgress[keyof GameProgress]>) => {
@@ -197,7 +185,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       progress,
       stats,
       login,
-      register,
       logout,
       updateProgress,
       isAuthenticated: !!user

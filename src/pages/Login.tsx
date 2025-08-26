@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useVoice } from '../contexts/VoiceContext';
 import { useUser } from '../contexts/UserContext';
 import Header from '../components/Header';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [userName, setUserName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,19 +24,19 @@ const Login: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    speak(t('login'));
-  }, 30000);  
+    const timer = setTimeout(() => {
+      speak(t('login'));
+    }, 30000);  
 
-  return () => clearTimeout(timer);
-}, [speak, t]);
+    return () => clearTimeout(timer);
+  }, [speak, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    if (!email || !password) {
+    if (!fullName || !userName) {
       const errorMsg = language === 'hi' ? 'कृपया सभी फ़ील्ड भरें' : 'Please fill in all fields';
       setError(errorMsg);
       speak(errorMsg);
@@ -45,13 +44,20 @@ const Login: React.FC = () => {
       return;
     }
 
-    const success = login(email, password);
-    
-    if (success) {
-      speak(language === 'hi' ? 'सफलतापूर्वक लॉग इन हो गए' : 'Successfully logged in');
-      navigate('/dashboard');
-    } else {
-      const errorMsg = language === 'hi' ? 'गलत ईमेल या पासवर्ड' : 'Invalid email or password';
+    try {
+      const success = await login(fullName, userName);
+      
+      if (success) {
+        speak(language === 'hi' ? 'सफलतापूर्वक लॉग इन हो गए' : 'Successfully logged in');
+        navigate('/dashboard');
+      } else {
+        const errorMsg = language === 'hi' ? 'गलत नाम या उपयोगकर्ता नाम' : 'Invalid name or username';
+        setError(errorMsg);
+        speak(errorMsg);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      const errorMsg = language === 'hi' ? 'नेटवर्क त्रुटि, कृपया पुनः प्रयास करें' : 'Network error, please try again';
       setError(errorMsg);
       speak(errorMsg);
     }
@@ -67,7 +73,7 @@ const Login: React.FC = () => {
         <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md transform hover:scale-105 transition-transform duration-300">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="h-10 w-10 text-white" />
+              <User className="h-10 w-10 text-white" />
             </div>
             <h2 className={`
               text-3xl font-bold text-gray-800 mb-2
@@ -84,58 +90,51 @@ const Login: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+            {/* Full Name Field */}
             <div>
               <label className={`
                 block text-sm font-medium text-gray-700 mb-2
                 ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}>
-                {t('email')}
+                {t('name')}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className={`
                     w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
                     ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
-                  placeholder={t('enterEmail')}
+                  placeholder={t('enterName')}
                   required
                 />
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Username Field */}
             <div>
               <label className={`
                 block text-sm font-medium text-gray-700 mb-2
                 ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}>
-                {t('password')}
+                {t('userName')}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="text"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
                   className={`
-                    w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
+                    w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
                     ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
-                  placeholder={t('enterPassword')}
+                  placeholder={t('enterUserName')}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
               </div>
             </div>
 

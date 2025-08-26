@@ -1,28 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Mail, Lock, Calendar, MapPin, Phone } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Calendar, MapPin, Phone, Users } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useVoice } from '../contexts/VoiceContext';
 import { useUser } from '../contexts/UserContext';
 import Header from '../components/Header';
+import { authAPI, handleApiError } from '../services/apiService';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
+    fullName: '',
+    userName: '',
+    gender: 'पुरुष', // Default value for Hindi
     age: '',
-    location: '',
-    phoneNumber: ''
+    stateOrUnionTerritory: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const { speak } = useVoice();
-  const { register, isAuthenticated } = useUser();
+  const { isAuthenticated } = useUser();
+
+  // Gender options based on language
+  const genderOptions = language === 'hi' 
+    ? [
+        { value: 'पुरुष', label: 'पुरुष' },
+        { value: 'महिला', label: 'महिला' },
+        { value: 'अन्य', label: 'अन्य' }
+      ]
+    : [
+        { value: 'Male', label: 'Male' },
+        { value: 'Female', label: 'Female' },
+        { value: 'Other', label: 'Other' }
+      ];
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -30,16 +42,16 @@ const Register: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
- useEffect(() => {
-  const timer = setTimeout(() => {
-    speak(t('register'));
-  }, 30000); // 30,000 milliseconds = 30 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      speak(t('register'));
+    }, 30000); // 30,000 milliseconds = 30 seconds
 
-  // Cleanup on unmount
-  return () => clearTimeout(timer);
-}, [speak, t]);
+    // Cleanup on unmount
+    return () => clearTimeout(timer);
+  }, [speak, t]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -52,7 +64,7 @@ const Register: React.FC = () => {
     setIsLoading(true);
 
     // Validation
-    if (!formData.name || !formData.email || !formData.password || !formData.age) {
+    if (!formData.fullName || !formData.userName || !formData.age || !formData.stateOrUnionTerritory) {
       const errorMsg = language === 'hi' ? 'कृपया सभी आवश्यक फ़ील्ड भरें' : 'Please fill in all required fields';
       setError(errorMsg);
       speak(errorMsg);
@@ -68,20 +80,66 @@ const Register: React.FC = () => {
       return;
     }
 
-    const success = register({
-      name: formData.name,
-      email: formData.email,
-      age: parseInt(formData.age),
-      location: formData.location,
-      phoneNumber: formData.phoneNumber,
-      password: formData.password
-    });
+    try {
+      const payload = {
+        fullName: formData.fullName,
+        userName: formData.userName,
+        gender: formData.gender,
+        age: parseInt(formData.age),
+        stateOrUnionTerritory: formData.stateOrUnionTerritory
+      };
 
-    if (success) {
-      speak(language === 'hi' ? 'सफलतापूर्वक पंजीकृत हो गए' : 'Successfully registered');
-      navigate('/dashboard');
-    } else {
-      const errorMsg = language === 'hi' ? 'इस ईमेल से पहले से खाता है' : 'Account already exists with this email';
+      const data = await authAPI.register(payload);
+
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem('ullas-token', data.data.token);
+        
+        // Store user data
+        const userData = {
+          id: data.data.user._id,
+          name: data.data.user.fullName,
+          userName: data.data.user.userName,
+          gender: data.data.user.gender,
+          age: data.data.user.age,
+          stateOrUnionTerritory: data.data.user.stateOrUnionTerritory,
+          role: data.data.user.role,
+          streak: data.data.user.streak,
+          createdAt: data.data.user.createdAt
+        };
+        localStorage.setItem('ullas-user', JSON.stringify(userData));
+
+        // Initialize progress and stats for new user
+        const defaultProgress = {
+          phonics: { level: 1, score: 0, completed: false },
+          imageWord: { level: 1, score: 0, completed: false },
+          counting: { level: 1, score: 0, completed: false },
+          reading: { level: 1, score: 0, completed: false },
+          writing: { level: 1, score: 0, completed: false },
+        };
+        const defaultStats = {
+          totalScore: 0,
+          gamesCompleted: 0,
+          streakDays: 0,
+          lastLoginDate: new Date().toISOString(),
+        };
+
+        localStorage.setItem('ullas-progress', JSON.stringify(defaultProgress));
+        localStorage.setItem('ullas-stats', JSON.stringify(defaultStats));
+        localStorage.setItem(`ullas-progress-${userData.id}`, JSON.stringify(defaultProgress));
+        localStorage.setItem(`ullas-stats-${userData.id}`, JSON.stringify(defaultStats));
+
+        const successMsg = language === 'hi' ? 'सफलतापूर्वक पंजीकृत हो गए' : 'Successfully registered';
+        speak(successMsg);
+        navigate('/dashboard');
+      } else {
+        const errorMsg = data.message || (language === 'hi' ? 'पंजीकरण में त्रुटि' : 'Registration error');
+        setError(errorMsg);
+        speak(errorMsg);
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      const errorMsg = handleApiError(error, language);
       setError(errorMsg);
       speak(errorMsg);
     }
@@ -114,7 +172,7 @@ const Register: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Field */}
+            {/* Full Name Field */}
             <div>
               <label className={`
                 block text-sm font-medium text-gray-700 mb-1
@@ -126,8 +184,8 @@ const Register: React.FC = () => {
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleInputChange}
                   className={`
                     w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
@@ -139,28 +197,62 @@ const Register: React.FC = () => {
               </div>
             </div>
 
-            {/* Email Field */}
+            {/* Username Field */}
             <div>
               <label className={`
                 block text-sm font-medium text-gray-700 mb-1
                 ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}>
-                {t('email')} *
+                {t('userName')} *
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="userName"
+                  value={formData.userName}
                   onChange={handleInputChange}
                   className={`
                     w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
                     ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
-                  placeholder={t('enterEmail')}
+                  placeholder={t('enterUserName')}
                   required
                 />
+              </div>
+            </div>
+
+            {/* Gender Field */}
+            <div>
+              <label className={`
+                block text-sm font-medium text-gray-700 mb-1
+                ${language === 'hi' ? 'font-hindi' : 'font-english'}
+              `}>
+                {t('gender')} *
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className={`
+                    w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200 appearance-none bg-white
+                    ${language === 'hi' ? 'font-hindi' : 'font-english'}
+                  `}
+                  required
+                >
+                  {genderOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -191,83 +283,28 @@ const Register: React.FC = () => {
               </div>
             </div>
 
-            {/* Location Field */}
+            {/* State/Union Territory Field */}
             <div>
               <label className={`
                 block text-sm font-medium text-gray-700 mb-1
                 ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}>
-                {t('location')}
+                {t('stateOrUnionTerritory')} *
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  name="location"
-                  value={formData.location}
+                  name="stateOrUnionTerritory"
+                  value={formData.stateOrUnionTerritory}
                   onChange={handleInputChange}
                   className={`
                     w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
                     ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
-                  placeholder={t('enterLocation')}
-                />
-              </div>
-            </div>
-
-            {/* Phone Field */}
-            <div>
-              <label className={`
-                block text-sm font-medium text-gray-700 mb-1
-                ${language === 'hi' ? 'font-hindi' : 'font-english'}
-              `}>
-                {t('phoneNumber')}
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className={`
-                    w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
-                    ${language === 'hi' ? 'font-hindi' : 'font-english'}
-                  `}
-                  placeholder={t('enterPhone')}
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className={`
-                block text-sm font-medium text-gray-700 mb-1
-                ${language === 'hi' ? 'font-hindi' : 'font-english'}
-              `}>
-                {t('password')} *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={`
-                    w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
-                    ${language === 'hi' ? 'font-hindi' : 'font-english'}
-                  `}
-                  placeholder={t('enterPassword')}
+                  placeholder={t('enterStateOrUnionTerritory')}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
               </div>
             </div>
 
