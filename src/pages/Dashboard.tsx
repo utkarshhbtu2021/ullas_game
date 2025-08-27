@@ -14,6 +14,7 @@ import { useVoice } from "../contexts/VoiceContext";
 import { useUser } from "../contexts/UserContext";
 import Header from "../components/Header";
 import GameCard from "../components/GameCard";
+import LevelCard from "../components/LevelCard";
 
 const Dashboard: React.FC = () => {
   const { language, t } = useLanguage();
@@ -22,6 +23,8 @@ const Dashboard: React.FC = () => {
   const [currentStats, setCurrentStats] = useState(stats);
   const [currentProgress, setCurrentProgress] = useState(progress);
   const [lastSpokenTime, setLastSpokenTime] = useState<number | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<'beginner' | 'medium' | 'advanced' | null>(null);
+  const [showGames, setShowGames] = useState(false);
 
   useEffect(() => {
     const now = Date.now();
@@ -63,6 +66,46 @@ const Dashboard: React.FC = () => {
     setCurrentStats(stats);
     setCurrentProgress(progress);
   }, [stats, progress]);
+
+  const levels = [
+    {
+      level: 'beginner' as const,
+      title: language === "hi" ? "शुरुआती स्तर" : "Beginner Level",
+      subtitle: language === "hi" ? "अक्षर और संख्या सीखें" : "Learn letters and numbers",
+      gamesCount: 3,
+      starsCount: 20,
+      isAvailable: true,
+    },
+    {
+      level: 'medium' as const,
+      title: language === "hi" ? "मध्यम स्तर" : "Medium Level",
+      subtitle: language === "hi" ? "शब्द और गिनती सीखें" : "Learn words and counting",
+      gamesCount: 3,
+      starsCount: 20,
+      isAvailable: false, // Only beginner level is available for now
+    },
+    {
+      level: 'advanced' as const,
+      title: language === "hi" ? "उन्नत स्तर" : "Advanced Level",
+      subtitle: language === "hi" ? "जीवन के काम की बातें सीखें" : "Learn life skills",
+      gamesCount: 3,
+      starsCount: 20,
+      isAvailable: false, // Only beginner level is available for now
+    },
+  ];
+
+  const handleLevelSelect = (level: 'beginner' | 'medium' | 'advanced') => {
+    setSelectedLevel(level);
+    // For now, only beginner level shows games
+    if (level === 'beginner') {
+      setShowGames(true);
+    }
+  };
+
+  const handleBackToLevels = () => {
+    setShowGames(false);
+    setSelectedLevel(null);
+  };
 
   const games = [
     {
@@ -321,31 +364,114 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Games Section */}
-        <div className="mb-8">
-          <h2
-            className={`
-            text-3xl font-bold text-center text-gray-800 mb-8
-            ${language === "hi" ? "font-hindi" : "font-english"}
-          `}
-          >
-            {t("games")}
-          </h2>
+        {/* Level Selection or Games Section */}
+        {!showGames ? (
+          /* Level Selection Section */
+          <div className="mb-8 relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-8">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5 pointer-events-none rounded-3xl">
+              <div className="grid grid-cols-8 gap-4 text-4xl text-gray-400 p-8">
+                {['अ', 'आ', 'इ', 'ओ', 'उ', 'ए', 'ऐ', 'औ'].map((char, index) => (
+                  <div key={index} className="text-center">{char}</div>
+                ))}
+              </div>
+            </div>
+            <div className="relative z-10">
+              <h2
+                className={`
+                text-3xl font-bold text-center text-gray-800 mb-2
+                ${language === "hi" ? "font-hindi" : "font-english"}
+              `}
+              >
+                {language === "hi" ? "शिक्षा के खेल" : "Education Games"}
+              </h2>
+              <p
+                className={`
+                text-lg text-center text-gray-600 mb-8
+                ${language === "hi" ? "font-hindi" : "font-english"}
+              `}
+              >
+                {language === "hi" 
+                  ? "खेलना शुरू करने के लिए स्तर चुनें" 
+                  : "Choose a level to start playing"
+                }
+              </p>
 
-          {/* First Row - Main Games */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {games.slice(0, 3).map((game, index) => (
-              <GameCard key={index} {...game} />
-            ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {levels.map((level, index) => (
+                  <LevelCard
+                    key={index}
+                    level={level.level}
+                    title={level.title}
+                    subtitle={level.subtitle}
+                    gamesCount={level.gamesCount}
+                    starsCount={level.starsCount}
+                    isAvailable={level.isAvailable}
+                    isSelected={selectedLevel === level.level}
+                    onSelect={() => handleLevelSelect(level.level)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
+        ) : (
+          /* Games Section */
+          <div className="mb-8">
+            {/* Back Button */}
+            <div className="flex justify-start mb-6">
+              <button
+                onClick={handleBackToLevels}
+                className={`
+                  flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200
+                  ${language === "hi" ? "font-hindi" : "font-english"}
+                `}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>{language === "hi" ? "स्तर चुनें" : "Choose Level"}</span>
+              </button>
+            </div>
 
-          {/* Second Row - Coming Soon Games */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {games.slice(3).map((game, index) => (
-              <GameCard key={index + 3} {...game} />
-            ))}
+            {/* Level Info */}
+            <div className="text-center mb-8">
+              <h2
+                className={`
+                text-3xl font-bold text-gray-800 mb-2
+                ${language === "hi" ? "font-hindi" : "font-english"}
+              `}
+              >
+                {selectedLevel === 'beginner' && (language === "hi" ? "शुरुआती स्तर" : "Beginner Level")}
+                {selectedLevel === 'medium' && (language === "hi" ? "मध्यम स्तर" : "Medium Level")}
+                {selectedLevel === 'advanced' && (language === "hi" ? "उन्नत स्तर" : "Advanced Level")}
+              </h2>
+              <p
+                className={`
+                text-lg text-gray-600
+                ${language === "hi" ? "font-hindi" : "font-english"}
+              `}
+              >
+                {selectedLevel === 'beginner' && (language === "hi" ? "अक्षर और संख्या सीखें" : "Learn letters and numbers")}
+                {selectedLevel === 'medium' && (language === "hi" ? "शब्द और गिनती सीखें" : "Learn words and counting")}
+                {selectedLevel === 'advanced' && (language === "hi" ? "जीवन के काम की बातें सीखें" : "Learn life skills")}
+              </p>
+            </div>
+
+            {/* Games Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {games.slice(0, 3).map((game, index) => (
+                <GameCard key={index} {...game} />
+              ))}
+            </div>
+
+            {/* Coming Soon Games */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {games.slice(3).map((game, index) => (
+                <GameCard key={index + 3} {...game} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Motivational Section */}
         <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-success-500 rounded-3xl p-8 text-center text-white shadow-2xl">
