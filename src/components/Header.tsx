@@ -30,8 +30,8 @@ const Header: React.FC = () => {
   return (
     <header className="mainHome__inner-header">
       <div className="container">
-        <div className="flex justify-between items-center row">
-          <div className="flex justify-center">
+        <div className="flex justify-between items-center row mainHeader">
+          <div className="flex justify-center logoSection">
             <img
               src="/public/images/logos/ullas-logo.svg"
               alt="ULLAS Logo"

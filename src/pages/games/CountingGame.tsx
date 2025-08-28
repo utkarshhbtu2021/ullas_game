@@ -33,23 +33,23 @@ const CountingGame: React.FC = () => {
       options: [2, 3, 4, 5]
     },
     {
-      items: ['⭐', '⭐', '⭐', '⭐', '⭐'],
-      count: 5,
+      items: ['🥭', '🥭', '🥭', '🥭'],
+      count: 4,
       options: [4, 5, 6, 7]
     },
     {
-      items: ['🌸', '🌸'],
+      items: ['🐠', '🐠', '🐠', '🐠', '🐠'],
+      count: 5,
+      options: [1, 2, 5, 4]
+    },
+    {
+      items: ['🐦', '🐦'],
       count: 2,
-      options: [1, 2, 3, 4]
+      options: [6, 7, 2, 9]
     },
     {
-      items: ['🎈', '🎈', '🎈', '🎈', '🎈', '🎈', '🎈'],
-      count: 7,
-      options: [6, 7, 8, 9]
-    },
-    {
-      items: ['🏀', '🏀', '🏀', '🏀'],
-      count: 4,
+      items: ['🌸', '🌸', '🌸', '🌸', '🌸', '🌸'],
+      count: 6,
       options: [3, 4, 5, 6]
     }
   ];
@@ -134,7 +134,7 @@ const CountingGame: React.FC = () => {
 
   if (gameCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-green-50">
+      <div className="min-h-screen mainHome__inner dashboard">
         <Header />
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="bg-white rounded-3xl shadow-2xl p-8 text-center max-w-md w-full">
@@ -239,7 +239,7 @@ const CountingGame: React.FC = () => {
               </div>
 
               {/* Count Instruction */}
-              <button
+              {/* <button
                 onClick={() => speak(language === 'hi' ? `${question.count} चीजें हैं` : `There are ${question.count} items`)}
                 className="flex items-center justify-center space-x-2 mx-auto mb-6 p-3 bg-warning-100 hover:bg-warning-200 rounded-full transition-colors duration-200"
                 title={t('tapToHear')}
@@ -248,7 +248,7 @@ const CountingGame: React.FC = () => {
                 <span className={`text-warning-700 font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
                   {language === 'hi' ? 'गिनती सुनें' : 'Listen to count'}
                 </span>
-              </button>
+              </button> */}
             </div>
 
             {/* Answer Options */}

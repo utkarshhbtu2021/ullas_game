@@ -71,15 +71,15 @@ const Dashboard: React.FC = () => {
     {
       level: 'beginner' as const,
       title: language === "hi" ? "शुरुआती स्तर" : "Beginner Level",
-      subtitle: language === "hi" ? "अक्षर और संख्या सीखें" : "Learn letters and numbers",
-      gamesCount: 3,
+      subtitle: language === "hi" ? "पहचान और पहचान" : "Recognition & Identification",
+      gamesCount: 2,
       starsCount: 20,
       isAvailable: true,
     },
     {
       level: 'medium' as const,
-      title: language === "hi" ? "मध्यम स्तर" : "Medium Level",
-      subtitle: language === "hi" ? "शब्द और गिनती सीखें" : "Learn words and counting",
+      title: language === "hi" ? "मध्यम स्तर" : "Intermediate Level",
+      subtitle: language === "hi" ? "समझ और निर्माण" : "Comprehension & Construction",
       gamesCount: 3,
       starsCount: 20,
       isAvailable: false, // Only beginner level is available for now
@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
     {
       level: 'advanced' as const,
       title: language === "hi" ? "उन्नत स्तर" : "Advanced Level",
-      subtitle: language === "hi" ? "जीवन के काम की बातें सीखें" : "Learn life skills",
+      subtitle: language === "hi" ? "दैनिक जीवन में आवेदन" : "Application in Daily Life",
       gamesCount: 3,
       starsCount: 20,
       isAvailable: false, // Only beginner level is available for now
@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
 
   const games = [
     {
-      title: t("phonicsGame"),
+      title: t("Letter–Sound Match"),
       description:
         language === "hi"
           ? "अक्षरों और ध्वनियों को सीखें"
@@ -123,23 +123,9 @@ const Dashboard: React.FC = () => {
         ? 100
         : (currentProgress.phonics.level - 1) * 20,
     },
+    
     {
-      title: t("imageWordGame"),
-      description:
-        language === "hi"
-          ? "चित्रों को शब्दों से मिलाएं"
-          : "Match pictures with words",
-      icon: <BookOpen className="h-8 w-8" />,
-      path: "/games/image-word",
-      isAvailable: true,
-      level: currentProgress.imageWord.level,
-      score: currentProgress.imageWord.score,
-      progress: currentProgress.imageWord.completed
-        ? 100
-        : (currentProgress.imageWord.level - 1) * 20,
-    },
-    {
-      title: t("countingGame"),
+      title: t("Counting Objects"),
       description:
         language === "hi"
           ? "संख्याओं को गिनना सीखें"
@@ -153,32 +139,47 @@ const Dashboard: React.FC = () => {
         ? 100
         : (currentProgress.counting.level - 1) * 20,
     },
-    {
-      title: t("readingGame"),
-      description:
-        language === "hi"
-          ? "वाक्य और कहानियां पढ़ें"
-          : "Read sentences and stories",
-      icon: <BookText className="h-8 w-8" />,
-      path: "/games/reading",
-      isAvailable: false,
-      level: currentProgress.reading.level,
-      score: currentProgress.reading.score,
-      progress: 0,
-    },
-    {
-      title: t("writingGame"),
-      description:
-        language === "hi"
-          ? "अक्षर और शब्द लिखना सीखें"
-          : "Learn to write letters and words",
-      icon: <PenTool className="h-8 w-8" />,
-      path: "/games/writing",
-      isAvailable: false,
-      level: currentProgress.writing.level,
-      score: currentProgress.writing.score,
-      progress: 0,
-    },
+    // {
+    //   title: t("imageWordGame"),
+    //   description:
+    //     language === "hi"
+    //       ? "चित्रों को शब्दों से मिलाएं"
+    //       : "Match pictures with words",
+    //   icon: <BookOpen className="h-8 w-8" />,
+    //   path: "/games/image-word",
+    //   isAvailable: true,
+    //   level: currentProgress.imageWord.level,
+    //   score: currentProgress.imageWord.score,
+    //   progress: currentProgress.imageWord.completed
+    //     ? 100
+    //     : (currentProgress.imageWord.level - 1) * 20,
+    // },
+    // {
+    //   title: t("readingGame"),
+    //   description:
+    //     language === "hi"
+    //       ? "वाक्य और कहानियां पढ़ें"
+    //       : "Read sentences and stories",
+    //   icon: <BookText className="h-8 w-8" />,
+    //   path: "/games/reading",
+    //   isAvailable: false,
+    //   level: currentProgress.reading.level,
+    //   score: currentProgress.reading.score,
+    //   progress: 0,
+    // },
+    // {
+    //   title: t("writingGame"),
+    //   description:
+    //     language === "hi"
+    //       ? "अक्षर और शब्द लिखना सीखें"
+    //       : "Learn to write letters and words",
+    //   icon: <PenTool className="h-8 w-8" />,
+    //   path: "/games/writing",
+    //   isAvailable: false,
+    //   level: currentProgress.writing.level,
+    //   score: currentProgress.writing.score,
+    //   progress: 0,
+    // },
   ];
 
   const achievements = [
