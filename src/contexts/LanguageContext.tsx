@@ -70,8 +70,8 @@ const content: Record<Language, Content> = {
     languageChanged: 'Language changed'
   },
   hi: {
-    welcome: 'उल्लास में आपका स्वागत है',
-    subtitle: 'साक्षरता की आपकी यात्रा यहाँ से शुरू होती है',
+    welcome: 'उल्लास - नव भारत साक्षरता कार्यक्रम',
+    subtitle: 'आओ मिलकर बनायें भारत का जन जन साक्षर',
     getStarted: 'शुरू करें',
     login: 'लॉग इन',
     register: 'पंजीकरण',
