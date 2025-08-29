@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Lock, Calendar, MapPin, Phone, Users } from 'lucide-react';
+import { User, Calendar, MapPin, Users } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useVoice } from '../contexts/VoiceContext';
 import { useUser } from '../contexts/UserContext';
@@ -34,6 +34,91 @@ const Register: React.FC = () => {
         { value: 'Male', label: 'Male' },
         { value: 'Female', label: 'Female' },
         { value: 'Other', label: 'Other' }
+      ];
+
+  // Indian States and Union Territories options based on language
+  const stateOptions = language === 'hi' 
+    ? [
+        { value: '', label: 'राज्य या केंद्र शासित प्रदेश चुनें' },
+        // States
+        { value: 'आंध्र प्रदेश', label: 'आंध्र प्रदेश' },
+        { value: 'अरुणाचल प्रदेश', label: 'अरुणाचल प्रदेश' },
+        { value: 'असम', label: 'असम' },
+        { value: 'बिहार', label: 'बिहार' },
+        { value: 'छत्तीसगढ़', label: 'छत्तीसगढ़' },
+        { value: 'गोवा', label: 'गोवा' },
+        { value: 'गुजरात', label: 'गुजरात' },
+        { value: 'हरियाणा', label: 'हरियाणा' },
+        { value: 'हिमाचल प्रदेश', label: 'हिमाचल प्रदेश' },
+        { value: 'झारखंड', label: 'झारखंड' },
+        { value: 'कर्नाटक', label: 'कर्नाटक' },
+        { value: 'केरल', label: 'केरल' },
+        { value: 'मध्य प्रदेश', label: 'मध्य प्रदेश' },
+        { value: 'महाराष्ट्र', label: 'महाराष्ट्र' },
+        { value: 'मणिपुर', label: 'मणिपुर' },
+        { value: 'मेघालय', label: 'मेघालय' },
+        { value: 'मिजोरम', label: 'मिजोरम' },
+        { value: 'नागालैंड', label: 'नागालैंड' },
+        { value: 'ओडिशा', label: 'ओडिशा' },
+        { value: 'पंजाब', label: 'पंजाब' },
+        { value: 'राजस्थान', label: 'राजस्थान' },
+        { value: 'सिक्किम', label: 'सिक्किम' },
+        { value: 'तमिलनाडु', label: 'तमिलनाडु' },
+        { value: 'तेलंगाना', label: 'तेलंगाना' },
+        { value: 'त्रिपुरा', label: 'त्रिपुरा' },
+        { value: 'उत्तर प्रदेश', label: 'उत्तर प्रदेश' },
+        { value: 'उत्तराखंड', label: 'उत्तराखंड' },
+        { value: 'पश्चिम बंगाल', label: 'पश्चिम बंगाल' },
+        // Union Territories
+        { value: 'अंडमान और निकोबार द्वीप समूह', label: 'अंडमान और निकोबार द्वीप समूह' },
+        { value: 'चंडीगढ़', label: 'चंडीगढ़' },
+        { value: 'दादरा और नगर हवेली और दमन और दीव', label: 'दादरा और नगर हवेली और दमन और दीव' },
+        { value: 'दिल्ली', label: 'दिल्ली' },
+        { value: 'जम्मू और कश्मीर', label: 'जम्मू और कश्मीर' },
+        { value: 'लद्दाख', label: 'लद्दाख' },
+        { value: 'लक्षद्वीप', label: 'लक्षद्वीप' },
+        { value: 'पुदुचेरी', label: 'पुदुचेरी' }
+      ]
+    : [
+        { value: '', label: 'Select State or Union Territory' },
+        // States
+        { value: 'Andhra Pradesh', label: 'Andhra Pradesh' },
+        { value: 'Arunachal Pradesh', label: 'Arunachal Pradesh' },
+        { value: 'Assam', label: 'Assam' },
+        { value: 'Bihar', label: 'Bihar' },
+        { value: 'Chhattisgarh', label: 'Chhattisgarh' },
+        { value: 'Goa', label: 'Goa' },
+        { value: 'Gujarat', label: 'Gujarat' },
+        { value: 'Haryana', label: 'Haryana' },
+        { value: 'Himachal Pradesh', label: 'Himachal Pradesh' },
+        { value: 'Jharkhand', label: 'Jharkhand' },
+        { value: 'Karnataka', label: 'Karnataka' },
+        { value: 'Kerala', label: 'Kerala' },
+        { value: 'Madhya Pradesh', label: 'Madhya Pradesh' },
+        { value: 'Maharashtra', label: 'Maharashtra' },
+        { value: 'Manipur', label: 'Manipur' },
+        { value: 'Meghalaya', label: 'Meghalaya' },
+        { value: 'Mizoram', label: 'Mizoram' },
+        { value: 'Nagaland', label: 'Nagaland' },
+        { value: 'Odisha', label: 'Odisha' },
+        { value: 'Punjab', label: 'Punjab' },
+        { value: 'Rajasthan', label: 'Rajasthan' },
+        { value: 'Sikkim', label: 'Sikkim' },
+        { value: 'Tamil Nadu', label: 'Tamil Nadu' },
+        { value: 'Telangana', label: 'Telangana' },
+        { value: 'Tripura', label: 'Tripura' },
+        { value: 'Uttar Pradesh', label: 'Uttar Pradesh' },
+        { value: 'Uttarakhand', label: 'Uttarakhand' },
+        { value: 'West Bengal', label: 'West Bengal' },
+        // Union Territories
+        { value: 'Andaman and Nicobar Islands', label: 'Andaman and Nicobar Islands' },
+        { value: 'Chandigarh', label: 'Chandigarh' },
+        { value: 'Dadra and Nagar Haveli and Daman and Diu', label: 'Dadra and Nagar Haveli and Daman and Diu' },
+        { value: 'Delhi', label: 'Delhi' },
+        { value: 'Jammu and Kashmir', label: 'Jammu and Kashmir' },
+        { value: 'Ladakh', label: 'Ladakh' },
+        { value: 'Lakshadweep', label: 'Lakshadweep' },
+        { value: 'Puducherry', label: 'Puducherry' }
       ];
 
   useEffect(() => {
@@ -293,18 +378,27 @@ const Register: React.FC = () => {
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
+                <select
                   name="stateOrUnionTerritory"
                   value={formData.stateOrUnionTerritory}
                   onChange={handleInputChange}
                   className={`
-                    w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200
+                    w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200 appearance-none bg-white
                     ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
-                  placeholder={t('enterStateOrUnionTerritory')}
                   required
-                />
+                >
+                  {stateOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 

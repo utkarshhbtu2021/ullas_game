@@ -25,6 +25,7 @@ const CountingGame: React.FC = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [wrongAnswerSelected, setWrongAnswerSelected] = useState(false);
 
   const questions: CountingQuestion[] = [
     {
@@ -89,6 +90,7 @@ const CountingGame: React.FC = () => {
         ? `गलत! सही उत्तर है ${questions[currentQuestion].count}`
         : `Wrong! The correct answer is ${questions[currentQuestion].count}`;
       speak(correctText);
+      setWrongAnswerSelected(true);
     }
     
     setShowResult(true);
@@ -98,6 +100,7 @@ const CountingGame: React.FC = () => {
         setCurrentQuestion(currentQuestion + 1);
         setSelectedAnswer(null);
         setShowResult(false);
+        setWrongAnswerSelected(false);
         // Don't call speakCurrentQuestion here - it will be called by useEffect
       } else {
         completeGame();
@@ -126,6 +129,7 @@ const CountingGame: React.FC = () => {
     setSelectedAnswer(null);
     setShowResult(false);
     setGameCompleted(false);
+    setWrongAnswerSelected(false);
     // Speak first question after restart
     setTimeout(() => {
       speakCurrentQuestion();
@@ -170,7 +174,7 @@ const CountingGame: React.FC = () => {
   const question = questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-green-50">
+    <div className="min-h-screen mainHome__inner dashboard">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -274,7 +278,7 @@ const CountingGame: React.FC = () => {
                   {option}
                   
                   {/* Confetti inside correct answer button */}
-    {showResult && option === question.count && (
+    {showResult && option === question.count && !wrongAnswerSelected && (
       <div className="absolute inset-0 pointer-events-none z-10">
         <Confetti
           numberOfPieces={500}

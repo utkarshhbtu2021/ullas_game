@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
 
   const games = [
     {
-      title: t("Letter–Sound Match"),
+      title: language === "hi" ? "अक्षर-ध्वनि मिलान" : "Letter–Sound Match",
       description:
         language === "hi"
           ? "अक्षरों और ध्वनियों को सीखें"
@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
     },
     
     {
-      title: t("Counting Objects"),
+      title: language === "hi" ? "वस्तुओं की गिनती" : "Counting Objects",
       description:
         language === "hi"
           ? "संख्याओं को गिनना सीखें"
@@ -208,162 +208,166 @@ const Dashboard: React.FC = () => {
       <Header />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="userSection blackBorder">
-          <div className="userSection__left">
-            <h1
-              className={`
-            text-4xl font-bold text-white mb-2
-            ${language === "hi" ? "font-hindi" : "font-english"}
-          `}
-            >
-              {language === "hi"
-                ? `नमस्ते, ${user?.name}!`
-                : `Welcome, ${user?.name}!`}
-            </h1>
-            <p
-              className={`
-            text-lg text-white
-            ${language === "hi" ? "font-hindi" : "font-english"}
-          `}
-            >
-              {language === "hi"
-                ? "आज कुछ नया सीखने के लिए तैयार हैं?"
-                : "Ready to learn something new today?"}
-            </p>
+        {/* Welcome Section - Only show when no level is selected */}
+        {!showGames && (
+          <div className="userSection blackBorder">
+            <div className="userSection__left">
+              <h1
+                className={`
+              text-4xl font-bold text-white mb-2
+              ${language === "hi" ? "font-hindi" : "font-english"}
+            `}
+              >
+                {language === "hi"
+                  ? `नमस्ते, ${user?.name}!`
+                  : `Welcome, ${user?.name}!`}
+              </h1>
+              <p
+                className={`
+              text-lg text-white
+              ${language === "hi" ? "font-hindi" : "font-english"}
+            `}
+              >
+                {language === "hi"
+                  ? "आज कुछ नया सीखने के लिए तैयार हैं?"
+                  : "Ready to learn something new today?"}
+              </p>
+            </div>
+            <div className="userSection__right"></div>
           </div>
-          <div className="userSection__right"></div>
-        </div> 
+        )} 
 
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8"> 
-          {/* Progress Section - Takes 2 columns */}
-          <div className="lg:col-span-2 blackBorder">
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6"> 
-                <h2
-                  className={`
-                  text-2xl font-bold text-gray-800
-                  ${language === "hi" ? "font-hindi" : "font-english"}
-                `}
-                >
-                  {t("progress")}
-                </h2>
-                {/* <button
-                  className={`
-                  px-4 py-2 bg-primary-100 text-primary-600 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors duration-200
-                  ${language === "hi" ? "font-hindi" : "font-english"}
-                `}
-                >
-                  {t("viewDetails")}
-                </button> */}
-              </div>
+        {/* Dashboard Grid - Only show when no level is selected */}
+        {!showGames && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8"> 
+            {/* Progress Section - Takes 2 columns */}
+            <div className="lg:col-span-2 blackBorder">
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+                <div className="flex justify-between items-center mb-6"> 
+                  <h2
+                    className={`
+                    text-2xl font-bold text-gray-800
+                    ${language === "hi" ? "font-hindi" : "font-english"}
+                  `}
+                  >
+                    {t("progress")}
+                  </h2>
+                  {/* <button
+                    className={`
+                    px-4 py-2 bg-primary-100 text-primary-600 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors duration-200
+                    ${language === "hi" ? "font-hindi" : "font-english"}
+                  `}
+                  >
+                    {t("viewDetails")}
+                  </button> */}
+                </div>
 
-              <div className="space-y-4">
-                {games
-                  .filter((game) => game.isAvailable)
-                  .map((game, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-white rounded-xl shadow-sm">
-                          {game.icon}
+                <div className="space-y-4">
+                  {games
+                    .filter((game) => game.isAvailable)
+                    .map((game, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="p-2 bg-white rounded-xl shadow-sm">
+                            {game.icon}
+                          </div>
+                          <div>
+                            <h3
+                              className={`
+                            font-semibold text-gray-800
+                            ${language === "hi" ? "font-hindi" : "font-english"}
+                          `}
+                            >
+                              {game.title}
+                            </h3>
+                            <p
+                              className={`
+                            text-sm text-gray-600
+                            ${language === "hi" ? "font-hindi" : "font-english"}
+                          `}
+                            >
+                              {language === "hi"
+                                ? `स्तर ${game.level} • स्कोर ${game.score}`
+                                : `Level ${game.level} • Score ${game.score}`}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3
-                            className={`
-                          font-semibold text-gray-800
-                          ${language === "hi" ? "font-hindi" : "font-english"}
-                        `}
-                          >
-                            {game.title}
-                          </h3>
-                          <p
-                            className={`
-                          text-sm text-gray-600
-                          ${language === "hi" ? "font-hindi" : "font-english"}
-                        `}
-                          >
-                            {language === "hi"
-                              ? `स्तर ${game.level} • स्कोर ${game.score}`
-                              : `Level ${game.level} • Score ${game.score}`}
+                        <div className="w-20">
+                          <div className="bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${Math.min(game.progress, 100)}%`,
+                              }}
+                            ></div>
+                          </div>
+                          <p className="text-xs text-gray-500 text-center mt-1">
+                            {Math.round(game.progress)}%
                           </p>
                         </div>
                       </div>
-                      <div className="w-20">
-                        <div className="bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${Math.min(game.progress, 100)}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-gray-500 text-center mt-1">
-                          {Math.round(game.progress)}%
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Achievements Section - Takes 1 column */}
-          <div className="lg:col-span-1 blackBorder">
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <h2
-                className={`
-                text-2xl font-bold text-gray-800 mb-6 text-center
-                ${language === "hi" ? "font-hindi" : "font-english"}
-              `}
-              >
-                {t("yourAchievements")}
-              </h2>
+            {/* Achievements Section - Takes 1 column */}
+            <div className="lg:col-span-1 blackBorder">
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+                <h2
+                  className={`
+                  text-2xl font-bold text-gray-800 mb-6 text-center
+                  ${language === "hi" ? "font-hindi" : "font-english"}
+                `}
+                >
+                  {t("yourAchievements")}
+                </h2>
 
-              <div className="space-y-4">
-                {achievements.map((achievement, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl hover:shadow-md transition-shadow duration-200"
-                  >
-                    <div className="flex items-center space-x-3">
-                      {achievement.icon}
+                <div className="space-y-4">
+                  {achievements.map((achievement, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl hover:shadow-md transition-shadow duration-200"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {achievement.icon}
+                        <span
+                          className={`
+                          text-sm font-medium text-gray-700
+                          ${language === "hi" ? "font-hindi" : "font-english"}
+                        `}
+                        >
+                          {achievement.title}
+                        </span>
+                      </div>
                       <span
                         className={`
-                        text-sm font-medium text-gray-700
-                        ${language === "hi" ? "font-hindi" : "font-english"}
+                        text-2xl font-bold
+                        ${
+                          achievement.color === "warning"
+                            ? "text-warning-600"
+                            : ""
+                        }
+                        ${
+                          achievement.color === "success"
+                            ? "text-success-600"
+                            : ""
+                        }
+                        ${achievement.color === "error" ? "text-error-600" : ""}
                       `}
                       >
-                        {achievement.title}
+                        {achievement.value}
                       </span>
                     </div>
-                    <span
-                      className={`
-                      text-2xl font-bold
-                      ${
-                        achievement.color === "warning"
-                          ? "text-warning-600"
-                          : ""
-                      }
-                      ${
-                        achievement.color === "success"
-                          ? "text-success-600"
-                          : ""
-                      }
-                      ${achievement.color === "error" ? "text-error-600" : ""}
-                    `}
-                    >
-                      {achievement.value}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Level Selection or Games Section */}
         {!showGames ? (
