@@ -15,6 +15,55 @@ import { useUser } from "../contexts/UserContext";
 import Header from "../components/Header";
 import GameCard from "../components/GameCard";
 import LevelCard from "../components/LevelCard";
+import axiosInstance from "../config/axiosInstance";
+
+// Define the level interface based on API response
+interface Level {
+  _id: string;
+  name: string;
+  subtitle: string;
+  lang: string;
+  quizId: string | null;
+  totalQuestions: number;
+  maxScore: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  totalGame: number;
+  level: string;
+}
+
+interface Game {
+  _id: string;
+  name: string;
+  subtitle: string;
+  lang: string;
+  quizId: string;
+  level: string;
+  totalQuestions: number;
+  totalGame: number;
+  maxScore: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface QuizResponse {
+  success: boolean;
+  message: string;
+  data: {
+    items: Level[];
+    total: number;
+    page: number;
+    pages: number;
+  };
+}
+
+interface GameResponse {
+  success: boolean;
+  message: string;
+  data: Game[];
+}
 
 const Dashboard: React.FC = () => {
   const { language, t } = useLanguage();
@@ -23,8 +72,74 @@ const Dashboard: React.FC = () => {
   const [currentStats, setCurrentStats] = useState(stats);
   const [currentProgress, setCurrentProgress] = useState(progress);
   const [lastSpokenTime, setLastSpokenTime] = useState<number | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<'beginner' | 'medium' | 'advanced' | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
   const [showGames, setShowGames] = useState(false);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [gamesLoading, setGamesLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [gamesError, setGamesError] = useState<string | null>(null);
+
+  // Fetch levels from API
+  useEffect(() => {
+    const fetchLevels = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await axiosInstance.get<QuizResponse>('/quizzes', {
+          headers: {
+            'Accept-Language': language === 'hi' ? 'hi' : 'en'
+          }
+        });
+        
+        if (response.data.success) {
+          setLevels(response.data.data.items);
+        } else {
+          setError('Failed to fetch levels');
+        }
+      } catch (err) {
+        console.error('Error fetching levels:', err);
+        setError('Failed to load levels. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLevels();
+  }, [language]);
+
+  // Fetch games when a level is selected
+  useEffect(() => {
+    const fetchGames = async () => {
+      if (!selectedLevel) return;
+      
+      try {
+        setGamesLoading(true);
+        setGamesError(null);
+        
+        const response = await axiosInstance.get<GameResponse>(`/quizzes/quiz/${selectedLevel._id}`, {
+          headers: {
+            'Accept-Language': language === 'hi' ? 'hi' : 'en'
+          }
+        });
+        
+        if (response.data.success) {
+          setGames(response.data.data);
+        } else {
+          setGamesError('Failed to fetch games');
+        }
+      } catch (err) {
+        console.error('Error fetching games:', err);
+        setGamesError('Failed to load games. Please try again.');
+      } finally {
+        setGamesLoading(false);
+      }
+    };
+
+    fetchGames();
+  }, [selectedLevel, language]);
 
   useEffect(() => {
     const now = Date.now();
@@ -67,120 +182,15 @@ const Dashboard: React.FC = () => {
     setCurrentProgress(progress);
   }, [stats, progress]);
 
-  const levels = [
-    {
-      level: 'beginner' as const,
-      title: language === "hi" ? "शुरुआती स्तर" : "Beginner Level",
-      subtitle: language === "hi" ? "पहचान और पहचान" : "Recognition & Identification",
-      gamesCount: 2,
-      starsCount: 20,
-      isAvailable: true,
-    },
-    {
-      level: 'medium' as const,
-      title: language === "hi" ? "मध्यम स्तर" : "Intermediate Level",
-      subtitle: language === "hi" ? "समझ और निर्माण" : "Comprehension & Construction",
-      gamesCount: 3,
-      starsCount: 20,
-      isAvailable: false, // Only beginner level is available for now
-    },
-    {
-      level: 'advanced' as const,
-      title: language === "hi" ? "उन्नत स्तर" : "Advanced Level",
-      subtitle: language === "hi" ? "दैनिक जीवन में आवेदन" : "Application in Daily Life",
-      gamesCount: 3,
-      starsCount: 20,
-      isAvailable: false, // Only beginner level is available for now
-    },
-  ];
-
-  const handleLevelSelect = (level: 'beginner' | 'medium' | 'advanced') => {
+  const handleLevelSelect = (level: Level) => {
     setSelectedLevel(level);
-    // For now, only beginner level shows games
-    if (level === 'beginner') {
-      setShowGames(true);
-    }
+    setShowGames(true);
   };
 
   const handleBackToLevels = () => {
     setShowGames(false);
     setSelectedLevel(null);
   };
-
-  const games = [
-    {
-      title: language === "hi" ? "अक्षर-ध्वनि मिलान" : "Letter–Sound Match",
-      description:
-        language === "hi"
-          ? "अक्षरों और ध्वनियों को सीखें"
-          : "Learn letters and sounds",
-      icon: <Brain className="h-8 w-8" />,
-      path: "/games/phonics",
-      isAvailable: true,
-      level: currentProgress.phonics.level,
-      score: currentProgress.phonics.score,
-      progress: currentProgress.phonics.completed
-        ? 100
-        : (currentProgress.phonics.level - 1) * 20,
-    },
-    
-    {
-      title: language === "hi" ? "वस्तुओं की गिनती" : "Counting Objects",
-      description:
-        language === "hi"
-          ? "संख्याओं को गिनना सीखें"
-          : "Learn to count numbers",
-      icon: <Calculator className="h-8 w-8" />,
-      path: "/games/counting",
-      isAvailable: true,
-      level: currentProgress.counting.level,
-      score: currentProgress.counting.score,
-      progress: currentProgress.counting.completed
-        ? 100
-        : (currentProgress.counting.level - 1) * 20,
-    },
-    // {
-    //   title: t("imageWordGame"),
-    //   description:
-    //     language === "hi"
-    //       ? "चित्रों को शब्दों से मिलाएं"
-    //       : "Match pictures with words",
-    //   icon: <BookOpen className="h-8 w-8" />,
-    //   path: "/games/image-word",
-    //   isAvailable: true,
-    //   level: currentProgress.imageWord.level,
-    //   score: currentProgress.imageWord.score,
-    //   progress: currentProgress.imageWord.completed
-    //     ? 100
-    //     : (currentProgress.imageWord.level - 1) * 20,
-    // },
-    // {
-    //   title: t("readingGame"),
-    //   description:
-    //     language === "hi"
-    //       ? "वाक्य और कहानियां पढ़ें"
-    //       : "Read sentences and stories",
-    //   icon: <BookText className="h-8 w-8" />,
-    //   path: "/games/reading",
-    //   isAvailable: false,
-    //   level: currentProgress.reading.level,
-    //   score: currentProgress.reading.score,
-    //   progress: 0,
-    // },
-    // {
-    //   title: t("writingGame"),
-    //   description:
-    //     language === "hi"
-    //       ? "अक्षर और शब्द लिखना सीखें"
-    //       : "Learn to write letters and words",
-    //   icon: <PenTool className="h-8 w-8" />,
-    //   path: "/games/writing",
-    //   isAvailable: false,
-    //   level: currentProgress.writing.level,
-    //   score: currentProgress.writing.score,
-    //   progress: 0,
-    // },
-  ];
 
   const achievements = [
     {
@@ -263,53 +273,89 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                  {games
-                    .filter((game) => game.isAvailable)
-                    .map((game, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="p-2 bg-white rounded-xl shadow-sm">
-                            {game.icon}
-                          </div>
-                          <div>
-                            <h3
-                              className={`
-                            font-semibold text-gray-800
-                            ${language === "hi" ? "font-hindi" : "font-english"}
-                          `}
-                            >
-                              {game.title}
-                            </h3>
-                            <p
-                              className={`
-                            text-sm text-gray-600
-                            ${language === "hi" ? "font-hindi" : "font-english"}
-                          `}
-                            >
-                              {language === "hi"
-                                ? `स्तर ${game.level} • स्कोर ${game.score}`
-                                : `Level ${game.level} • Score ${game.score}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="w-20">
-                          <div className="bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${Math.min(game.progress, 100)}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <p className="text-xs text-gray-500 text-center mt-1">
-                            {Math.round(game.progress)}%
-                          </p>
-                        </div>
+                  {/* Phonics Game Progress */}
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-2 bg-white rounded-xl shadow-sm">
+                        <Brain className="h-8 w-8" />
                       </div>
-                    ))}
+                      <div>
+                        <h3
+                          className={`
+                        font-semibold text-gray-800
+                        ${language === "hi" ? "font-hindi" : "font-english"}
+                      `}
+                        >
+                          {language === "hi" ? "अक्षर-ध्वनि मिलान" : "Letter–Sound Match"}
+                        </h3>
+                        <p
+                          className={`
+                        text-sm text-gray-600
+                        ${language === "hi" ? "font-hindi" : "font-english"}
+                      `}
+                        >
+                          {language === "hi"
+                            ? `स्तर ${currentProgress.phonics.level} • स्कोर ${currentProgress.phonics.score}`
+                            : `Level ${currentProgress.phonics.level} • Score ${currentProgress.phonics.score}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-20">
+                      <div className="bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500 text-center mt-1">
+                        {Math.round(currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20)}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Counting Game Progress */}
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-2 bg-white rounded-xl shadow-sm">
+                        <Calculator className="h-8 w-8" />
+                      </div>
+                      <div>
+                        <h3
+                          className={`
+                        font-semibold text-gray-800
+                        ${language === "hi" ? "font-hindi" : "font-english"}
+                      `}
+                        >
+                          {language === "hi" ? "वस्तुओं की गिनती" : "Counting Objects"}
+                        </h3>
+                        <p
+                          className={`
+                        text-sm text-gray-600
+                        ${language === "hi" ? "font-hindi" : "font-english"}
+                      `}
+                        >
+                          {language === "hi"
+                            ? `स्तर ${currentProgress.counting.level} • स्कोर ${currentProgress.counting.score}`
+                            : `Level ${currentProgress.counting.level} • Score ${currentProgress.counting.score}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-20">
+                      <div className="bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500 text-center mt-1">
+                        {Math.round(currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20)}%
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -402,21 +448,48 @@ const Dashboard: React.FC = () => {
                 }
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {levels.map((level, index) => (
-                  <LevelCard
-                    key={index}
-                    level={level.level}
-                    title={level.title}
-                    subtitle={level.subtitle}
-                    gamesCount={level.gamesCount}
-                    starsCount={level.starsCount}
-                    isAvailable={level.isAvailable}
-                    isSelected={selectedLevel === level.level}
-                    onSelect={() => handleLevelSelect(level.level)}
-                  />
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                  <span className={`ml-3 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                    {language === "hi" ? "स्तर लोड हो रहे हैं..." : "Loading levels..."}
+                  </span>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className={`text-red-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                    {error}
+                  </p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+                  >
+                    {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
+                  </button>
+                </div>
+              ) : levels.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className={`text-gray-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                    {language === "hi" ? "कोई स्तर उपलब्ध नहीं है" : "No levels available"}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {levels.map((level, index) => (
+                    <LevelCard
+                      key={level._id}
+                      level={level.level}
+                      title={level.name}
+                      subtitle={level.subtitle}
+                      gamesCount={level.totalGame}
+                      starsCount={level.maxScore}
+                      isAvailable={true} // Assuming all levels are available for now
+                      isSelected={selectedLevel?._id === level._id}
+                      onSelect={() => handleLevelSelect(level)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -446,9 +519,7 @@ const Dashboard: React.FC = () => {
                 ${language === "hi" ? "font-hindi" : "font-english"}
               `}
               >
-                {selectedLevel === 'beginner' && (language === "hi" ? "शुरुआती स्तर" : "Beginner Level")}
-                {selectedLevel === 'medium' && (language === "hi" ? "मध्यम स्तर" : "Medium Level")}
-                {selectedLevel === 'advanced' && (language === "hi" ? "उन्नत स्तर" : "Advanced Level")}
+                {selectedLevel?.name}
               </h2>
               <p
                 className={`
@@ -456,25 +527,87 @@ const Dashboard: React.FC = () => {
                 ${language === "hi" ? "font-hindi" : "font-english"}
               `}
               >
-                {selectedLevel === 'beginner' && (language === "hi" ? "अक्षर और संख्या सीखें" : "Learn letters and numbers")}
-                {selectedLevel === 'medium' && (language === "hi" ? "शब्द और गिनती सीखें" : "Learn words and counting")}
-                {selectedLevel === 'advanced' && (language === "hi" ? "जीवन के काम की बातें सीखें" : "Learn life skills")}
+                {selectedLevel?.subtitle}
               </p>
             </div>
 
-            {/* Games Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {games.slice(0, 3).map((game, index) => (
-                <GameCard key={index} {...game} />
-              ))}
-            </div>
+                          {/* Games Grid */}
+              {gamesLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                  <span className={`ml-3 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                    {language === "hi" ? "खेल लोड हो रहे हैं..." : "Loading games..."}
+                  </span>
+                </div>
+              ) : gamesError ? (
+                <div className="text-center py-12">
+                  <p className={`text-red-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                    {gamesError}
+                  </p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+                  >
+                    {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
+                  </button>
+                </div>
+              ) : games.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className={`text-gray-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                    {language === "hi" ? "कोई खेल उपलब्ध नहीं है" : "No games available"}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                  {games.map((game) => {
+                    // Map game name to appropriate icon and path
+                    const getGameConfig = (gameName: string) => {
+                      const nameLower = gameName.toLowerCase();
+                      if (nameLower.includes('अक्षर') || nameLower.includes('letter') || nameLower.includes('आवाज') || nameLower.includes('sound')) {
+                        return {
+                          icon: <Brain className="h-8 w-8" />,
+                          path: "/games/phonics",
+                          level: currentProgress.phonics.level,
+                          score: currentProgress.phonics.score,
+                          progress: currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20
+                        };
+                      } else if (nameLower.includes('वस्तु') || nameLower.includes('गिनना') || nameLower.includes('count') || nameLower.includes('object')) {
+                        return {
+                          icon: <Calculator className="h-8 w-8" />,
+                          path: "/games/counting",
+                          level: currentProgress.counting.level,
+                          score: currentProgress.counting.score,
+                          progress: currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20
+                        };
+                      } else {
+                        return {
+                          icon: <BookOpen className="h-8 w-8" />,
+                          path: "/games/generic",
+                          level: 1,
+                          score: 0,
+                          progress: 0
+                        };
+                      }
+                    };
 
-            {/* Coming Soon Games */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {games.slice(3).map((game, index) => (
-                <GameCard key={index + 3} {...game} />
-              ))}
-            </div>
+                    const gameConfig = getGameConfig(game.name);
+
+                    return (
+                      <GameCard
+                        key={game._id}
+                        title={game.name}
+                        description={game.subtitle}
+                        icon={gameConfig.icon}
+                        path={gameConfig.path}
+                        isAvailable={true}
+                        level={gameConfig.level}
+                        score={gameConfig.score}
+                        progress={gameConfig.progress}
+                      />
+                    );
+                  })}
+                </div>
+              )}
           </div>
         )}
 

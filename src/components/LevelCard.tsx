@@ -5,7 +5,7 @@ import { useVoice } from '../contexts/VoiceContext';
 import { Circle, Target, Star, CircleDot } from 'lucide-react';
 
 interface LevelCardProps {
-  level: 'beginner' | 'medium' | 'advanced';
+  level: string;
   title: string;
   subtitle: string;
   gamesCount: number;
@@ -28,22 +28,35 @@ const LevelCard: React.FC<LevelCardProps> = ({
   const { language } = useLanguage();
   const { speak } = useVoice();
 
-  const levelConfig = {
-    beginner: {
-      headerColor: 'bg-green-500',
-      icon: <Circle className="h-6 w-6" />,
-    },
-    medium: {
-      headerColor: 'bg-blue-500',
-      icon: <CircleDot size={16} strokeWidth={3} className="h-6 w-6" />,
-    },
-    advanced: {
-      headerColor: 'bg-purple-500',
-      icon: <Target className="h-6 w-6" />,
-    },
+  // Dynamic level configuration based on level name
+  const getLevelConfig = (levelName: string) => {
+    const levelLower = levelName.toLowerCase();
+    
+    if (levelLower.includes('शुरुआती') || levelLower.includes('beginner')) {
+      return {
+        headerColor: 'bg-green-500',
+        icon: <Circle className="h-6 w-6" />,
+      };
+    } else if (levelLower.includes('मध्यम') || levelLower.includes('medium') || levelLower.includes('intermediate')) {
+      return {
+        headerColor: 'bg-blue-500',
+        icon: <CircleDot size={16} strokeWidth={3} className="h-6 w-6" />,
+      };
+    } else if (levelLower.includes('उन्नत') || levelLower.includes('advanced')) {
+      return {
+        headerColor: 'bg-purple-500',
+        icon: <Target className="h-6 w-6" />,
+      };
+    } else {
+      // Default configuration for unknown levels
+      return {
+        headerColor: 'bg-gray-500',
+        icon: <Circle className="h-6 w-6" />,
+      };
+    }
   };
 
-  const config = levelConfig[level];
+  const config = getLevelConfig(level);
 
   const handleClick = () => {
     if (isAvailable) {
