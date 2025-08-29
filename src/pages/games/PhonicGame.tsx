@@ -28,6 +28,7 @@ const PhonicGame: React.FC = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [wrongAnswerSelected, setWrongAnswerSelected] = useState(false);
 
   const questions: PhonicQuestion[] = [
     {
@@ -148,6 +149,7 @@ const PhonicGame: React.FC = () => {
       speak(t("correct"));
     } else {
       speak(t("incorrect"));
+      setWrongAnswerSelected(true);
     }
 
     setShowResult(true);
@@ -157,6 +159,7 @@ const PhonicGame: React.FC = () => {
         setCurrentQuestion(currentQuestion + 1);
         setSelectedAnswer(null);
         setShowResult(false);
+        setWrongAnswerSelected(false);
         // Don't call speakCurrentQuestion here - it will be called by useEffect
       } else {
         completeGame();
@@ -187,6 +190,7 @@ const PhonicGame: React.FC = () => {
     setSelectedAnswer(null);
     setShowResult(false);
     setGameCompleted(false);
+    setWrongAnswerSelected(false);
     // Speak first question after restart
     setTimeout(() => {
       speakCurrentQuestion();
@@ -376,7 +380,7 @@ const PhonicGame: React.FC = () => {
                   `}
                 >
                   {option}
-                  {showResult && option === question.correctAnswer && (
+                  {showResult && option === question.correctAnswer && !wrongAnswerSelected && (
                     <div className="absolute inset-0 pointer-events-none z-10">
                       <Confetti
                         numberOfPieces={300}

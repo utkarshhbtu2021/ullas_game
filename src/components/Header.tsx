@@ -44,13 +44,15 @@ const Header: React.FC = () => {
             />
           </div>
           <div className="flex justify-end items-center space-x-4">
-            <Link
-              to="/"
-              className="text-primary-600 font-semibold hover:text-primary-700 focus:outline-none focus:underline"
-              onClick={() => speak(t("Home"))}
-            >
-              {t("Home")}
-            </Link>
+            {!user && (
+              <Link
+                to="/"
+                className="text-primary-600 font-semibold hover:text-primary-700 focus:outline-none focus:underline"
+                onClick={() => speak(t("Home"))}
+              >
+                {t("Home")}
+              </Link>
+            )}
             <button
               onClick={handleLanguageToggle}
               className="p-3 flex rounded-full bg-secondary-100 hover:bg-secondary-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500"
