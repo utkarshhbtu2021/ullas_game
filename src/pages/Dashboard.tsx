@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchUserMatrix();
-  }, []);
+  }, [language]);
 
   // Reset to main dashboard when language changes
   useEffect(() => {
@@ -119,6 +119,8 @@ const Dashboard: React.FC = () => {
     setShowGames(false);
     setGames([]);
     setGamesError(null);
+    setUserMatrixData(null)
+    setMatrixError(null)
   }, [language]);
 
   // Fetch levels from API
