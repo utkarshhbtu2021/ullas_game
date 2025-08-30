@@ -100,6 +100,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(userData);
         localStorage.setItem('ullas-user', JSON.stringify(userData));
+        localStorage.setItem('streak', JSON.stringify(userData.streak));
 
         // Load user-specific progress and stats
         const userProgress = localStorage.getItem(`ullas-progress-${userData.id}`);

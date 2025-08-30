@@ -43,6 +43,44 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
+// User Matrix Types
+export interface Badge {
+  name: string;
+  description: string;
+  earned: boolean;
+}
+
+export interface TopUser {
+  totalScore: number;
+  totalCompletedQuiz: number;
+  userId: string;
+  fullName: string;
+}
+
+export interface QuizInfo {
+  quizId: string;
+  quizName: string;
+  quizSet: string;
+  score: number;
+  level: string;
+  percentage: number;
+}
+
+export interface UserMatrix {
+  userId: string;
+  totalCompletedQuiz: number;
+  totalScore: number;
+  badges: Badge[];
+  topUsers: TopUser[];
+  quizInfo: QuizInfo[];
+}
+
+export interface UserMatrixResponse {
+  success: boolean;
+  message: string;
+  data: UserMatrix;
+}
+
 // Auth API calls
 export const authAPI = {
   // Register new user
@@ -72,6 +110,15 @@ export const authAPI = {
   // Update user profile
   updateProfile: async (payload: Partial<User>): Promise<ApiResponse<User>> => {
     const response = await axiosInstance.put<ApiResponse<User>>('/auth/profile', payload);
+    return response.data;
+  }
+};
+
+// User API calls
+export const userAPI = {
+  // Get user matrix data
+  getUserMatrix: async (): Promise<UserMatrixResponse> => {
+    const response = await axiosInstance.get<UserMatrixResponse>('/users/matrix');
     return response.data;
   }
 };
@@ -193,6 +240,7 @@ export const handleApiError = (error: any, language: 'en' | 'hi' = 'en'): string
 
 export default {
   auth: authAPI,
+  user: userAPI,
   game: gameAPI,
   stats: statsAPI,
   quiz: quizAPI,
