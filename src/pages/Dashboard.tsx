@@ -46,6 +46,7 @@ interface Game {
   maxScore: number;
   createdAt: string;
   updatedAt: string;
+  percentage: number;
   __v: number;
 }
 
@@ -611,9 +612,9 @@ const Dashboard: React.FC = () => {
                       icon={gameConfig.icon}
                       path={gameConfig.path}
                       isAvailable={true}
-                      level={quizInfo?.level || game.level}
-                      score={quizInfo?.score || game.maxScore}
-                      progress={quizInfo ? Math.min(quizInfo.percentage > 100 ? 100 : quizInfo.percentage, 100) : 0}
+                      level={game.level || quizInfo?.level}
+                      score={game.maxScore || quizInfo?.score}
+                      progress={game?.percentage || 0}
                       quizId={game._id}
                     />
                   );
