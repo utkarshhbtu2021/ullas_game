@@ -81,6 +81,15 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [gamesError, setGamesError] = useState<string | null>(null);
 
+  // Reset to main dashboard when language changes
+  useEffect(() => {
+    // Reset game-related state when language changes
+    setSelectedLevel(null);
+    setShowGames(false);
+    setGames([]);
+    setGamesError(null);
+  }, [language]);
+
   // Fetch levels from API
   useEffect(() => {
     const fetchLevels = async () => {
@@ -531,83 +540,84 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
 
-                          {/* Games Grid */}
-              {gamesLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-                  <span className={`ml-3 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-                    {language === "hi" ? "खेल लोड हो रहे हैं..." : "Loading games..."}
-                  </span>
-                </div>
-              ) : gamesError ? (
-                <div className="text-center py-12">
-                  <p className={`text-red-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-                    {gamesError}
-                  </p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
-                  >
-                    {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
-                  </button>
-                </div>
-              ) : games.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className={`text-gray-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-                    {language === "hi" ? "कोई खेल उपलब्ध नहीं है" : "No games available"}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                  {games.map((game) => {
-                    // Map game name to appropriate icon and path
-                    const getGameConfig = (gameName: string) => {
-                      const nameLower = gameName.toLowerCase();
-                      if (nameLower.includes('अक्षर') || nameLower.includes('letter') || nameLower.includes('आवाज') || nameLower.includes('sound')) {
-                        return {
-                          icon: <Brain className="h-8 w-8" />,
-                          path: "/games/phonics",
-                          level: currentProgress.phonics.level,
-                          score: currentProgress.phonics.score,
-                          progress: currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20
-                        };
-                      } else if (nameLower.includes('वस्तु') || nameLower.includes('गिनना') || nameLower.includes('count') || nameLower.includes('object')) {
-                        return {
-                          icon: <Calculator className="h-8 w-8" />,
-                          path: "/games/counting",
-                          level: currentProgress.counting.level,
-                          score: currentProgress.counting.score,
-                          progress: currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20
-                        };
-                      } else {
-                        return {
-                          icon: <BookOpen className="h-8 w-8" />,
-                          path: "/games/generic",
-                          level: 1,
-                          score: 0,
-                          progress: 0
-                        };
-                      }
-                    };
+            {/* Games Grid */}
+            {gamesLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                <span className={`ml-3 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                  {language === "hi" ? "खेल लोड हो रहे हैं..." : "Loading games..."}
+                </span>
+              </div>
+            ) : gamesError ? (
+              <div className="text-center py-12">
+                <p className={`text-red-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                  {gamesError}
+                </p>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+                >
+                  {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
+                </button>
+              </div>
+            ) : games.length === 0 ? (
+              <div className="text-center py-12">
+                <p className={`text-gray-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                  {language === "hi" ? "कोई खेल उपलब्ध नहीं है" : "No games available"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                {games.map((game) => {
+                  // Map game name to appropriate icon and path
+                  const getGameConfig = (gameName: string) => {
+                    const nameLower = gameName.toLowerCase();
+                    if (nameLower.includes('अक्षर') || nameLower.includes('letter') || nameLower.includes('आवाज') || nameLower.includes('sound')) {
+                      return {
+                        icon: <Brain className="h-8 w-8" />,
+                        path: "/games/phonics",
+                        level: currentProgress.phonics.level,
+                        score: currentProgress.phonics.score,
+                        progress: currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20
+                      };
+                    } else if (nameLower.includes('वस्तु') || nameLower.includes('गिनना') || nameLower.includes('count') || nameLower.includes('object')) {
+                      return {
+                        icon: <Calculator className="h-8 w-8" />,
+                        path: "/games/counting",
+                        level: currentProgress.counting.level,
+                        score: currentProgress.counting.score,
+                        progress: currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20
+                      };
+                    } else {
+                      return {
+                        icon: <BookOpen className="h-8 w-8" />,
+                        path: "/games/generic",
+                        level: 1,
+                        score: 0,
+                        progress: 0
+                      };
+                    }
+                  };
 
-                    const gameConfig = getGameConfig(game.name);
+                  const gameConfig = getGameConfig(game.name);
 
-                    return (
-                      <GameCard
-                        key={game._id}
-                        title={game.name}
-                        description={game.subtitle}
-                        icon={gameConfig.icon}
-                        path={gameConfig.path}
-                        isAvailable={true}
-                        level={gameConfig.level}
-                        score={gameConfig.score}
-                        progress={gameConfig.progress}
-                      />
-                    );
-                  })}
-                </div>
-              )}
+                  return (
+                    <GameCard
+                      key={game._id}
+                      title={game.name}
+                      description={game.subtitle}
+                      icon={gameConfig.icon}
+                      path={gameConfig.path}
+                      isAvailable={true}
+                      level={game.level}
+                      score={game.maxScore}
+                      progress={gameConfig.progress}
+                      quizId={game._id}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

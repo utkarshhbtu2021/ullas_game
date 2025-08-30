@@ -9,6 +9,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  onLanguageChange?: (newLang: Language) => void;
+  setOnLanguageChange?: (callback: ((newLang: Language) => void) | undefined) => void;
 }
 
 const content: Record<Language, Content> = {
@@ -67,7 +69,10 @@ const content: Record<Language, Content> = {
     tapToHear: 'Tap to hear',
     instructions: 'Instructions',
     backToDashboard: 'Back to Dashboard',
-    languageChanged: 'Language changed'
+    languageChanged: 'Language changed',
+    beginner: 'Beginner',
+    intermediate: 'Intermediate',
+    advanced: 'Advanced'
   },
   hi: {
     welcome: 'उल्लास - नव भारत साक्षरता कार्यक्रम',
@@ -124,7 +129,10 @@ const content: Record<Language, Content> = {
     tapToHear: 'सुनने के लिए टैप करें',
     instructions: 'निर्देश',
     backToDashboard: 'डैशबोर्ड पर वापस',
-    languageChanged: 'भाषा बदल गई'
+    languageChanged: 'भाषा बदल गई',
+    beginner: 'शुरुआती',
+    intermediate: 'मध्यम',
+    advanced: 'उन्नत'
   }
 };
 
@@ -135,6 +143,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const stored = localStorage.getItem('ullas-language');
     return (stored as Language) || 'hi';
   });
+  const [onLanguageChange, setOnLanguageChange] = useState<((newLang: Language) => void) | undefined>(undefined);
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLanguage(newLang);
+    if (onLanguageChange) {
+      onLanguageChange(newLang);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('ullas-language', language);
@@ -153,7 +169,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage: handleLanguageChange, 
+      t, 
+      onLanguageChange,
+      setOnLanguageChange 
+    }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Volume2, RefreshCw, Award } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useVoice } from '../../contexts/VoiceContext';
 import { useUser } from '../../contexts/UserContext';
 import Header from '../../components/Header';
 import Confetti from 'react-confetti';
+import { quizAPI } from '../../services/apiService';
 
 interface CountingQuestion {
   items: string[];
@@ -13,11 +14,53 @@ interface CountingQuestion {
   options: number[];
 }
 
+interface ApiQuestion {
+  _id: string;
+  quizId: string;
+  text: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  correctAnswer: string;
+  type: string;
+  level: string;
+  lang: string;
+}
+
+interface QuizAttemptData {
+  quizId: string;
+  quizSet: string;
+  answers: Array<{
+    questionId: string;
+    selectedOption: string;
+    isCorrect: boolean;
+    timeTakenSec: number;
+  }>;
+  score: number;
+  totalQuestions: number;
+  skippedCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  timeTakenSec: number;
+  isCompleted: boolean;
+}
+
 const CountingGame: React.FC = () => {
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const location = useLocation();
+  const { language, t, setOnLanguageChange } = useLanguage();
   const { speak } = useVoice();
   const { progress, updateProgress } = useUser();
+
+  // Ref to track if initial speech has been spoken
+  const hasSpokenInitial = useRef(false);
+  const hasSpokenCurrentQuestion = useRef<number>(-1);
+
+  // Get quizId from location state
+  const quizId = location.state?.quizId;
 
   const [currentLevel, setCurrentLevel] = useState(progress.counting.level);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -26,74 +69,191 @@ const CountingGame: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [wrongAnswerSelected, setWrongAnswerSelected] = useState(false);
+  const [questions, setQuestions] = useState<CountingQuestion[]>([]);
+  const [apiQuestions, setApiQuestions] = useState<ApiQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCount, setIncorrectCount] = useState(0);
+  const [currentApiLevel, setCurrentApiLevel] = useState<string>('');
 
-  const questions: CountingQuestion[] = [
-    {
-      items: ['🍎', '🍎', '🍎'],
-      count: 3,
-      options: [2, 3, 4, 5]
-    },
-    {
-      items: ['🥭', '🥭', '🥭', '🥭'],
-      count: 4,
-      options: [4, 5, 6, 7]
-    },
-    {
-      items: ['🐠', '🐠', '🐠', '🐠', '🐠'],
-      count: 5,
-      options: [1, 2, 5, 4]
-    },
-    {
-      items: ['🐦', '🐦'],
-      count: 2,
-      options: [6, 7, 2, 9]
-    },
-    {
-      items: ['🌸', '🌸', '🌸', '🌸', '🌸', '🌸'],
-      count: 6,
-      options: [3, 4, 5, 6]
-    }
-  ];
-
+  // Set up language change callback to redirect to dashboard
   useEffect(() => {
-    speak(`${t('countingGame')}. ${t('instructions')}: ${language === 'hi' ? 'चित्रों को गिनें और सही संख्या चुनें' : 'Count the items and select the correct number'}`);
-    // Speak current question after a short delay
-    setTimeout(() => {
-      speakCurrentQuestion();
-    }, 2000);
-  }, []);
+    if (setOnLanguageChange) {
+      setOnLanguageChange(() => (newLang: string) => {
+        navigate('/dashboard');
+      });
+    }
 
-  // Speak question when currentQuestion changes
+    // Cleanup function to remove the callback when component unmounts
+    return () => {
+      if (setOnLanguageChange) {
+        setOnLanguageChange(undefined);
+      }
+    };
+  }, [navigate, setOnLanguageChange]);
+
+  // Fetch questions from API
   useEffect(() => {
-    if (currentQuestion > 0 && !showResult) {
+    const fetchQuestions = async () => {
+      if (!quizId) {
+        setError(t('quiz') + ' ID not found');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await quizAPI.getQuestionsByQuizId(quizId);
+        
+        if (response.success && response.data) {
+          setApiQuestions(response.data);
+          
+          // Set the level from the first question
+          if (response.data.length > 0) {
+            setCurrentApiLevel(response.data[0].level);
+          }
+          
+          // Transform API questions to CountingQuestion format
+          const transformedQuestions: CountingQuestion[] = response.data.map((apiQuestion: ApiQuestion) => {
+            // Extract emojis from text and create items array
+            const emojis = [...apiQuestion.text];
+            const uniqueEmojis = [...new Set(emojis)];
+            const items = Array.from({ length: emojis.length }, () => uniqueEmojis[0]);
+            
+            // Convert options object to number array
+            const optionsArray = Object.values(apiQuestion.options).map(option => {
+              // Convert Devanagari numerals to Arabic numerals
+              const devanagariToArabic: { [key: string]: number } = {
+                '०': 0, '१': 1, '२': 2, '३': 3, '४': 4, '५': 5, 
+                '६': 6, '७': 7, '८': 8, '९': 9, '१०': 10, '११': 11
+              };
+              return devanagariToArabic[option] || parseInt(option) || 0;
+            });
+            
+            return {
+              items: items,
+              count: emojis.length,
+              options: optionsArray
+            };
+          });
+          
+          setQuestions(transformedQuestions);
+        } else {
+          setError(t('incorrect'));
+        }
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+        setError(t('incorrect') + '. ' + t('tryAgain'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [quizId, t]);
+
+  // Initial speech when questions are loaded
+  useEffect(() => {
+    if (questions.length > 0 && !hasSpokenInitial.current) {
+      hasSpokenInitial.current = true;
+      speak(`${t('countingGame')}. ${t('instructions')}: ${t('selectCorrectAnswer')}`);
+      // Speak current question after a short delay
+      setTimeout(() => {
+        speakCurrentQuestion();
+      }, 2000);
+    }
+  }, [questions, t, speak]);
+
+  // Speak question when currentQuestion changes (but not on initial load)
+  useEffect(() => {
+    if (hasSpokenCurrentQuestion.current !== currentQuestion && 
+        hasSpokenInitial.current && 
+        !showResult && 
+        questions.length > 0 && 
+        currentQuestion > 0) {
       speakCurrentQuestion();
     }
-  }, [currentQuestion]);
+  }, [currentQuestion, questions, showResult]);
 
   const speakCurrentQuestion = () => {
-    const instruction = language === 'hi' 
-      ? 'इन चीजों को गिनें और सही संख्या चुनें'
-      : 'Count these items and select the correct number';
+    if (questions.length === 0) return;
+    
+    // Update the ref to track which question we've spoken
+    hasSpokenCurrentQuestion.current = currentQuestion;
+    
+    const instruction = t('selectCorrectAnswer');
     speak(instruction);
   };
 
-  const handleAnswerSelect = (answer: number) => {
+  const submitQuizAttempt = async (selectedOption: number, isCorrect: boolean) => {
+    if (!quizId || apiQuestions.length === 0) return;
+
+    const currentApiQuestion = apiQuestions[currentQuestion];
+    const isLastQuestion = currentQuestion === questions.length - 1;
+
+    // Find the option key (A, B, C, D) for the selected value
+    const selectedOptionKey = Object.keys(currentApiQuestion.options).find(
+      key => {
+        const devanagariToArabic: { [key: string]: number } = {
+          '०': 0, '१': 1, '२': 2, '३': 3, '४': 4, '५': 5, 
+          '६': 6, '७': 7, '८': 8, '९': 9, '१०': 10, '११': 11
+        };
+        const optionValue = currentApiQuestion.options[key as keyof typeof currentApiQuestion.options];
+        return (devanagariToArabic[optionValue] || parseInt(optionValue)) === selectedOption;
+      }
+    );
+
+    const attemptData: QuizAttemptData = {
+      quizId: quizId,
+      quizSet: currentApiQuestion.type,
+      answers: [
+        {
+          questionId: currentApiQuestion._id,
+          selectedOption: selectedOptionKey || "A",
+          isCorrect: isCorrect,
+          timeTakenSec: 0
+        }
+      ],
+      score: score + (isCorrect ? 10 : 0),
+      totalQuestions: questions.length,
+      skippedCount: 0,
+      correctCount: correctCount + (isCorrect ? 1 : 0),
+      incorrectCount: incorrectCount + (isCorrect ? 0 : 1),
+      timeTakenSec: 0,
+      isCompleted: isLastQuestion
+    };
+
+    try {
+      await quizAPI.submitQuizAttempt(attemptData);
+      console.log('Quiz attempt submitted successfully');
+    } catch (err) {
+      console.error('Error submitting quiz attempt:', err);
+    }
+  };
+
+  const handleAnswerSelect = async (answer: number) => {
+    if (questions.length === 0) return;
+    
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].count;
     
     if (isCorrect) {
       setScore(score + 10);
-      const countText = language === 'hi' ? `${answer} सही है!` : `${answer} is correct!`;
-      speak(`${t('correct')}! ${countText}`);
+      setCorrectCount(correctCount + 1);
+      speak(`${t('correct')}! ${answer}`);
     } else {
-      const correctText = language === 'hi' 
-        ? `गलत! सही उत्तर है ${questions[currentQuestion].count}`
-        : `Wrong! The correct answer is ${questions[currentQuestion].count}`;
-      speak(correctText);
+      setIncorrectCount(incorrectCount + 1);
+      speak(`${t('incorrect')} ${t('correct')} ${questions[currentQuestion].count}`);
       setWrongAnswerSelected(true);
     }
     
     setShowResult(true);
+    
+    // Submit quiz attempt
+    await submitQuizAttempt(answer, isCorrect);
     
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
@@ -101,14 +261,16 @@ const CountingGame: React.FC = () => {
         setSelectedAnswer(null);
         setShowResult(false);
         setWrongAnswerSelected(false);
-        // Don't call speakCurrentQuestion here - it will be called by useEffect
+        // The next question will be spoken by the useEffect hook automatically
       } else {
         completeGame();
       }
-    }, 3000);
+    }, 2000);
   };
 
   const completeGame = () => {
+    if (questions.length === 0) return;
+    
     const finalScore = score + (selectedAnswer === questions[currentQuestion].count ? 10 : 0);
     const newLevel = Math.min(currentLevel + 1, 5);
     const completed = newLevel >= 5;
@@ -130,11 +292,83 @@ const CountingGame: React.FC = () => {
     setShowResult(false);
     setGameCompleted(false);
     setWrongAnswerSelected(false);
-    // Speak first question after restart
+    setCorrectCount(0);
+    setIncorrectCount(0);
+    
+    // Reset speech tracking refs
+    hasSpokenInitial.current = false;
+    hasSpokenCurrentQuestion.current = -1;
+    
+    // Speak initial instructions after restart
     setTimeout(() => {
-      speakCurrentQuestion();
+      hasSpokenInitial.current = true;
+      speak(`${t('countingGame')}. ${t('instructions')}: ${t('selectCorrectAnswer')}`);
+      setTimeout(() => {
+        speakCurrentQuestion();
+      }, 2000);
     }, 1000);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen mainHome__inner dashboard">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className={`text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+              {language === "hi" ? "प्रश्न लोड हो रहे हैं..." : "Loading questions..."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen mainHome__inner dashboard">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <p className={`text-red-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+              {error}
+            </p>
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            >
+              {t('backToDashboard')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no questions
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen mainHome__inner dashboard">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <p className={`text-gray-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+              {language === "hi" ? "कोई प्रश्न उपलब्ध नहीं है" : "No questions available"}
+            </p>
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            >
+              {t('backToDashboard')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (gameCompleted) {
     return (
@@ -192,7 +426,7 @@ const CountingGame: React.FC = () => {
           
           <div className="flex items-center space-x-4">
             <div className={`px-4 py-2 bg-primary-100 text-primary-700 rounded-full font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
-              {t('level')} {currentLevel}
+              {t('level')}: {t(currentApiLevel)}
             </div>
             <div className={`px-4 py-2 bg-success-100 text-success-700 rounded-full font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
               {t('score')}: {score}
@@ -204,7 +438,7 @@ const CountingGame: React.FC = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className={`text-sm text-gray-600 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
-              {language === 'hi' ? 'प्रगति' : 'Progress'}
+              {t('progress')}
             </span>
             <span className={`text-sm text-gray-600 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
               {currentQuestion + 1} / {questions.length}
@@ -241,18 +475,6 @@ const CountingGame: React.FC = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Count Instruction */}
-              {/* <button
-                onClick={() => speak(language === 'hi' ? `${question.count} चीजें हैं` : `There are ${question.count} items`)}
-                className="flex items-center justify-center space-x-2 mx-auto mb-6 p-3 bg-warning-100 hover:bg-warning-200 rounded-full transition-colors duration-200"
-                title={t('tapToHear')}
-              >
-                <Volume2 className="h-6 w-6 text-warning-600" />
-                <span className={`text-warning-700 font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
-                  {language === 'hi' ? 'गिनती सुनें' : 'Listen to count'}
-                </span>
-              </button> */}
             </div>
 
             {/* Answer Options */}
@@ -278,21 +500,20 @@ const CountingGame: React.FC = () => {
                   {option}
                   
                   {/* Confetti inside correct answer button */}
-    {showResult && option === question.count && !wrongAnswerSelected && (
-      <div className="absolute inset-0 pointer-events-none z-10">
-        <Confetti
-          numberOfPieces={500}
-          recycle={false}
-          width={216}
-          height={80}
-        />
-      </div>
-    )}
+                  {showResult && option === question.count && !wrongAnswerSelected && (
+                    <div className="absolute inset-0 pointer-events-none z-10">
+                      <Confetti
+                        numberOfPieces={500}
+                        recycle={false}
+                        width={216}
+                        height={80}
+                      />
+                    </div>
+                  )}
 
-    {!showResult && (
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 transform -skew-x-12"></div>
-    )}
-                  
+                  {!showResult && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 transform -skew-x-12"></div>
+                  )}
                 </button>
               ))}
             </div>
@@ -313,7 +534,7 @@ const CountingGame: React.FC = () => {
                   ) : (
                     <>
                       <RefreshCw className="h-5 w-5" />
-                      <span>{t('incorrect')} - {language === 'hi' ? 'सही उत्तर' : 'Correct answer'}: {question.count}</span>
+                      <span>{t('incorrect')} - {t('correct')}: {question.count}</span>
                     </>
                   )}
                 </div>

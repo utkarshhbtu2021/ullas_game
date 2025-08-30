@@ -10,9 +10,10 @@ interface GameCardProps {
   icon: React.ReactNode;
   path: string;
   isAvailable: boolean;
-  level?: number;
+  level?: string | number;
   score?: number;
   progress?: number;
+  quizId?: string;
 }
 
 const GameCard: React.FC<GameCardProps> = ({
@@ -23,7 +24,8 @@ const GameCard: React.FC<GameCardProps> = ({
   isAvailable,
   level = 1,
   score = 0,
-  progress = 0
+  progress = 0,
+  quizId
 }) => {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
@@ -32,10 +34,23 @@ const GameCard: React.FC<GameCardProps> = ({
   const handleClick = () => {
     if (isAvailable) {
       speak(title);
-      navigate(path);
+      // If quizId is provided, pass it as state instead of URL parameter
+      if (quizId) {
+        navigate(path, { state: { quizId } });
+      } else {
+        navigate(path);
+      }
     } else {
       speak(t('comingSoon'));
     }
+  };
+
+  // Helper function to get level display text
+  const getLevelDisplay = () => {
+    if (typeof level === 'string') {
+      return t(level); // Use translation for level names like 'beginner', 'intermediate', etc.
+    }
+    return level; // Return number as is
   };
 
   return (
@@ -117,7 +132,7 @@ const GameCard: React.FC<GameCardProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="text-center">
             <p className="text-xs text-gray-500 uppercase tracking-wide">{t('level')}</p>
-            <p className="text-lg font-bold text-primary-600">{level}</p>
+            <p className="text-lg font-bold text-primary-600">{getLevelDisplay()}</p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 uppercase tracking-wide">{t('score')}</p>
