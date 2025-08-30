@@ -43,6 +43,44 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
+// User Matrix Types
+export interface Badge {
+  name: string;
+  description: string;
+  earned: boolean;
+}
+
+export interface TopUser {
+  totalScore: number;
+  totalCompletedQuiz: number;
+  userId: string;
+  fullName: string;
+}
+
+export interface QuizInfo {
+  quizId: string;
+  quizName: string;
+  quizSet: string;
+  score: number;
+  level: string;
+  percentage: number;
+}
+
+export interface UserMatrix {
+  userId: string;
+  totalCompletedQuiz: number;
+  totalScore: number;
+  badges: Badge[];
+  topUsers: TopUser[];
+  quizInfo: QuizInfo[];
+}
+
+export interface UserMatrixResponse {
+  success: boolean;
+  message: string;
+  data: UserMatrix;
+}
+
 // Auth API calls
 export const authAPI = {
   // Register new user
@@ -72,6 +110,15 @@ export const authAPI = {
   // Update user profile
   updateProfile: async (payload: Partial<User>): Promise<ApiResponse<User>> => {
     const response = await axiosInstance.put<ApiResponse<User>>('/auth/profile', payload);
+    return response.data;
+  }
+};
+
+// User API calls
+export const userAPI = {
+  // Get user matrix data
+  getUserMatrix: async (): Promise<UserMatrixResponse> => {
+    const response = await axiosInstance.get<UserMatrixResponse>('/users/matrix');
     return response.data;
   }
 };
@@ -115,6 +162,49 @@ export const statsAPI = {
   }
 };
 
+// Quiz API calls
+export const quizAPI = {
+  // Get questions by quiz ID
+  getQuestionsByQuizId: async (quizId: string): Promise<ApiResponse> => {
+    const response = await axiosInstance.get<ApiResponse>(`/questions/quiz/${quizId}`);
+    return response.data;
+  },
+
+  // Submit quiz attempt
+  submitQuizAttempt: async (attemptData: {
+    quizId: string;
+    quizSet: string;
+    answers: Array<{
+      questionId: string;
+      selectedOption: string;
+      isCorrect: boolean;
+      timeTakenSec: number;
+    }>;
+    score: number;
+    totalQuestions: number;
+    skippedCount: number;
+    correctCount: number;
+    incorrectCount: number;
+    timeTakenSec: number;
+    isCompleted: boolean;
+  }): Promise<ApiResponse> => {
+    const response = await axiosInstance.post<ApiResponse>('/quiz-attempts', attemptData);
+    return response.data;
+  },
+
+  // Get all quizzes
+  getQuizzes: async (): Promise<ApiResponse> => {
+    const response = await axiosInstance.get<ApiResponse>('/quizzes');
+    return response.data;
+  },
+
+  // Get games by quiz ID
+  getGamesByQuizId: async (quizId: string): Promise<ApiResponse> => {
+    const response = await axiosInstance.get<ApiResponse>(`/quizzes/quiz/${quizId}`);
+    return response.data;
+  }
+};
+
 // Error handling utility
 export const handleApiError = (error: any, language: 'en' | 'hi' = 'en'): string => {
   if (error.response?.data?.message) {
@@ -150,7 +240,9 @@ export const handleApiError = (error: any, language: 'en' | 'hi' = 'en'): string
 
 export default {
   auth: authAPI,
+  user: userAPI,
   game: gameAPI,
   stats: statsAPI,
+  quiz: quizAPI,
   handleError: handleApiError
 };

@@ -16,6 +16,7 @@ import Header from "../components/Header";
 import GameCard from "../components/GameCard";
 import LevelCard from "../components/LevelCard";
 import axiosInstance from "../config/axiosInstance";
+import { userAPI, UserMatrix, QuizInfo } from "../services/apiService";
 
 // Define the level interface based on API response
 interface Level {
@@ -68,9 +69,13 @@ interface GameResponse {
 const Dashboard: React.FC = () => {
   const { language, t } = useLanguage();
   const { speak } = useVoice();
-  const { user, progress, stats } = useUser();
-  const [currentStats, setCurrentStats] = useState(stats);
-  const [currentProgress, setCurrentProgress] = useState(progress);
+  const { user } = useUser();
+  
+  // User Matrix State
+  const [userMatrixData, setUserMatrixData] = useState<UserMatrix | null>(null);
+  const [matrixLoading, setMatrixLoading] = useState(true);
+  const [matrixError, setMatrixError] = useState<string | null>(null);
+  
   const [lastSpokenTime, setLastSpokenTime] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
   const [showGames, setShowGames] = useState(false);
@@ -80,6 +85,40 @@ const Dashboard: React.FC = () => {
   const [gamesLoading, setGamesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gamesError, setGamesError] = useState<string | null>(null);
+
+  // Fetch user matrix data
+  useEffect(() => {
+    const fetchUserMatrix = async () => {
+      try {
+        setMatrixLoading(true);
+        setMatrixError(null);
+        
+        const response = await userAPI.getUserMatrix();
+        
+        if (response.success) {
+          setUserMatrixData(response.data);
+        } else {
+          setMatrixError('Failed to fetch user matrix data');
+        }
+      } catch (err) {
+        console.error('Error fetching user matrix:', err);
+        setMatrixError('Failed to load user data. Please try again.');
+      } finally {
+        setMatrixLoading(false);
+      }
+    };
+
+    fetchUserMatrix();
+  }, []);
+
+  // Reset to main dashboard when language changes
+  useEffect(() => {
+    // Reset game-related state when language changes
+    setSelectedLevel(null);
+    setShowGames(false);
+    setGames([]);
+    setGamesError(null);
+  }, [language]);
 
   // Fetch levels from API
   useEffect(() => {
@@ -158,30 +197,6 @@ const Dashboard: React.FC = () => {
     }
   }, [speak, t, language, user, lastSpokenTime]);
 
-  // Listen for real-time updates
-  useEffect(() => {
-    const handleProgressUpdate = (event: CustomEvent) => {
-      setCurrentStats(event.detail.stats);
-      setCurrentProgress(event.detail.progress);
-    };
-
-    window.addEventListener(
-      "userProgressUpdate",
-      handleProgressUpdate as EventListener
-    );
-    return () =>
-      window.removeEventListener(
-        "userProgressUpdate",
-        handleProgressUpdate as EventListener
-      );
-  }, []);
-
-  // Update local state when context changes
-  useEffect(() => {
-    setCurrentStats(stats);
-    setCurrentProgress(progress);
-  }, [stats, progress]);
-
   const handleLevelSelect = (level: Level) => {
     setSelectedLevel(level);
     setShowGames(true);
@@ -192,23 +207,33 @@ const Dashboard: React.FC = () => {
     setSelectedLevel(null);
   };
 
+  // Helper function to find quiz info by name
+  const findQuizInfoByName = (quizName: string): QuizInfo | null => {
+    if (!userMatrixData?.quizInfo) return null;
+    
+    return userMatrixData.quizInfo.find(quiz => 
+      quiz.quizName.toLowerCase().includes(quizName.toLowerCase()) ||
+      quizName.toLowerCase().includes(quiz.quizName.toLowerCase())
+    ) || null;
+  };
+
   const achievements = [
     {
       icon: <Trophy className="h-8 w-8 text-warning-500" />,
       title: t("gamesCompleted"),
-      value: currentStats.gamesCompleted,
+      value: userMatrixData?.totalCompletedQuiz || 0,
       color: "warning",
     },
     {
       icon: <Target className="h-8 w-8 text-success-500" />,
       title: t("totalScore"),
-      value: currentStats.totalScore,
+      value: userMatrixData?.totalScore || 0,
       color: "success",
     },
     {
       icon: <Flame className="h-8 w-8 text-error-500" />,
       title: t("streakDays"),
-      value: currentStats.streakDays,
+      value: user?.streak, // Not provided in API, keeping default
       color: "error",
     },
   ];
@@ -262,101 +287,87 @@ const Dashboard: React.FC = () => {
                   >
                     {t("progress")}
                   </h2>
-                  {/* <button
-                    className={`
-                    px-4 py-2 bg-primary-100 text-primary-600 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors duration-200
-                    ${language === "hi" ? "font-hindi" : "font-english"}
-                  `}
-                  >
-                    {t("viewDetails")}
-                  </button> */}
                 </div>
 
-                <div className="space-y-4">
-                  {/* Phonics Game Progress */}
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 bg-white rounded-xl shadow-sm">
-                        <Brain className="h-8 w-8" />
-                      </div>
-                      <div>
-                        <h3
-                          className={`
-                        font-semibold text-gray-800
-                        ${language === "hi" ? "font-hindi" : "font-english"}
-                      `}
-                        >
-                          {language === "hi" ? "अक्षर-ध्वनि मिलान" : "Letter–Sound Match"}
-                        </h3>
-                        <p
-                          className={`
-                        text-sm text-gray-600
-                        ${language === "hi" ? "font-hindi" : "font-english"}
-                      `}
-                        >
-                          {language === "hi"
-                            ? `स्तर ${currentProgress.phonics.level} • स्कोर ${currentProgress.phonics.score}`
-                            : `Level ${currentProgress.phonics.level} • Score ${currentProgress.phonics.score}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-20">
-                      <div className="bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20, 100)}%`,
-                          }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 text-center mt-1">
-                        {Math.round(currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20)}%
-                      </p>
-                    </div>
+                {matrixLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                    <span className={`ml-3 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                      {language === "hi" ? "लोड हो रहा है..." : "Loading..."}
+                    </span>
                   </div>
+                ) : matrixError ? (
+                  <div className="text-center py-8">
+                    <p className={`text-red-500 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                      {matrixError}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userMatrixData?.quizInfo && userMatrixData.quizInfo.length > 0 ? userMatrixData.quizInfo.map((quiz, index) => {
+                      // Determine icon based on quiz name
+                      const getQuizIcon = (quizName: string) => {
+                        const nameLower = quizName.toLowerCase();
+                        if (nameLower.includes('अक्षर') || nameLower.includes('letter') || nameLower.includes('ध्वनि') || nameLower.includes('sound') || nameLower.includes('मिलान')) {
+                          return <Brain className="h-8 w-8" />;
+                        } else if (nameLower.includes('count') || nameLower.includes('गिनती') || nameLower.includes('object') || nameLower.includes('वस्तु')) {
+                          return <Calculator className="h-8 w-8" />;
+                        } else {
+                          return <BookOpen className="h-8 w-8" />;
+                        }
+                      };
 
-                  {/* Counting Game Progress */}
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 bg-white rounded-xl shadow-sm">
-                        <Calculator className="h-8 w-8" />
-                      </div>
-                      <div>
-                        <h3
-                          className={`
-                        font-semibold text-gray-800
-                        ${language === "hi" ? "font-hindi" : "font-english"}
-                      `}
-                        >
-                          {language === "hi" ? "वस्तुओं की गिनती" : "Counting Objects"}
-                        </h3>
-                        <p
-                          className={`
-                        text-sm text-gray-600
-                        ${language === "hi" ? "font-hindi" : "font-english"}
-                      `}
-                        >
-                          {language === "hi"
-                            ? `स्तर ${currentProgress.counting.level} • स्कोर ${currentProgress.counting.score}`
-                            : `Level ${currentProgress.counting.level} • Score ${currentProgress.counting.score}`}
+                      return (
+                        <div key={quiz.quizId} className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl">
+                          <div className="flex items-center space-x-4">
+                            <div className="p-2 bg-white rounded-xl shadow-sm">
+                              {getQuizIcon(quiz.quizName)}
+                            </div>
+                            <div>
+                              <h3
+                                className={`
+                              font-semibold text-gray-800
+                              ${language === "hi" ? "font-hindi" : "font-english"}
+                            `}
+                              >
+                                {quiz.quizName}
+                              </h3>
+                              <p
+                                className={`
+                              text-sm text-gray-600
+                              ${language === "hi" ? "font-hindi" : "font-english"}
+                            `}
+                              >
+                                {language === "hi"
+                                  ? `स्तर: ${quiz.level} • स्कोर: ${quiz.score}`
+                                  : `Level: ${quiz.level} • Score: ${quiz.score}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="w-20">
+                            <div className="bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${Math.min(quiz.percentage > 100 ? 100 : quiz.percentage, 100)}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <p className="text-xs text-gray-500 text-center mt-1">
+                              {Math.min(quiz.percentage > 100 ? 100 : quiz.percentage, 100)}%
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }) : (
+                      <div className="text-center py-8">
+                        <p className={`text-gray-500 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                          {language === "hi" ? "कोई प्रगति डेटा उपलब्ध नहीं है" : "No progress data available"}
                         </p>
                       </div>
-                    </div>
-                    <div className="w-20">
-                      <div className="bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-success-400 to-success-500 h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20, 100)}%`,
-                          }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 text-center mt-1">
-                        {Math.round(currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20)}%
-                      </p>
-                    </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -372,44 +383,50 @@ const Dashboard: React.FC = () => {
                   {t("yourAchievements")}
                 </h2>
 
-                <div className="space-y-4">
-                  {achievements.map((achievement, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl hover:shadow-md transition-shadow duration-200"
-                    >
-                      <div className="flex items-center space-x-3">
-                        {achievement.icon}
+                {matrixLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {achievements.map((achievement, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="flex items-center space-x-3">
+                          {achievement.icon}
+                          <span
+                            className={`
+                            text-sm font-medium text-gray-700
+                            ${language === "hi" ? "font-hindi" : "font-english"}
+                          `}
+                          >
+                            {achievement.title}
+                          </span>
+                        </div>
                         <span
                           className={`
-                          text-sm font-medium text-gray-700
-                          ${language === "hi" ? "font-hindi" : "font-english"}
+                          text-2xl font-bold
+                          ${
+                            achievement.color === "warning"
+                              ? "text-warning-600"
+                              : ""
+                          }
+                          ${
+                            achievement.color === "success"
+                              ? "text-success-600"
+                              : ""
+                          }
+                          ${achievement.color === "error" ? "text-error-600" : ""}
                         `}
                         >
-                          {achievement.title}
+                          {achievement.value}
                         </span>
                       </div>
-                      <span
-                        className={`
-                        text-2xl font-bold
-                        ${
-                          achievement.color === "warning"
-                            ? "text-warning-600"
-                            : ""
-                        }
-                        ${
-                          achievement.color === "success"
-                            ? "text-success-600"
-                            : ""
-                        }
-                        ${achievement.color === "error" ? "text-error-600" : ""}
-                      `}
-                      >
-                        {achievement.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -531,83 +548,78 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
 
-                          {/* Games Grid */}
-              {gamesLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-                  <span className={`ml-3 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-                    {language === "hi" ? "खेल लोड हो रहे हैं..." : "Loading games..."}
-                  </span>
-                </div>
-              ) : gamesError ? (
-                <div className="text-center py-12">
-                  <p className={`text-red-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-                    {gamesError}
-                  </p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
-                  >
-                    {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
-                  </button>
-                </div>
-              ) : games.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className={`text-gray-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-                    {language === "hi" ? "कोई खेल उपलब्ध नहीं है" : "No games available"}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                  {games.map((game) => {
-                    // Map game name to appropriate icon and path
-                    const getGameConfig = (gameName: string) => {
-                      const nameLower = gameName.toLowerCase();
-                      if (nameLower.includes('अक्षर') || nameLower.includes('letter') || nameLower.includes('आवाज') || nameLower.includes('sound')) {
-                        return {
-                          icon: <Brain className="h-8 w-8" />,
-                          path: "/games/phonics",
-                          level: currentProgress.phonics.level,
-                          score: currentProgress.phonics.score,
-                          progress: currentProgress.phonics.completed ? 100 : (currentProgress.phonics.level - 1) * 20
-                        };
-                      } else if (nameLower.includes('वस्तु') || nameLower.includes('गिनना') || nameLower.includes('count') || nameLower.includes('object')) {
-                        return {
-                          icon: <Calculator className="h-8 w-8" />,
-                          path: "/games/counting",
-                          level: currentProgress.counting.level,
-                          score: currentProgress.counting.score,
-                          progress: currentProgress.counting.completed ? 100 : (currentProgress.counting.level - 1) * 20
-                        };
-                      } else {
-                        return {
-                          icon: <BookOpen className="h-8 w-8" />,
-                          path: "/games/generic",
-                          level: 1,
-                          score: 0,
-                          progress: 0
-                        };
-                      }
-                    };
+            {/* Games Grid */}
+            {gamesLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                <span className={`ml-3 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                  {language === "hi" ? "खेल लोड हो रहे हैं..." : "Loading games..."}
+                </span>
+              </div>
+            ) : gamesError ? (
+              <div className="text-center py-12">
+                <p className={`text-red-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                  {gamesError}
+                </p>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+                >
+                  {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
+                </button>
+              </div>
+            ) : games.length === 0 ? (
+              <div className="text-center py-12">
+                <p className={`text-gray-500 text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+                  {language === "hi" ? "कोई खेल उपलब्ध नहीं है" : "No games available"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                {games.map((game) => {
+                  // Find quiz info from user matrix data for this specific game
+                  const quizInfo = findQuizInfoByName(game.name);
+                  
+                  // Map game name to appropriate icon and path
+                  const getGameConfig = (gameName: string) => {
+                    const nameLower = gameName.toLowerCase();
+                    if (nameLower.includes('अक्षर') || nameLower.includes('letter') || nameLower.includes('ध्वनि') || nameLower.includes('sound') || nameLower.includes('मिलान')) {
+                      return {
+                        icon: <Brain className="h-8 w-8" />,
+                        path: "/games/phonics"
+                      };
+                    } else if (nameLower.includes('वस्तु') || nameLower.includes('गिनना') || nameLower.includes('count') || nameLower.includes('object') || nameLower.includes('गिनती')) {
+                      return {
+                        icon: <Calculator className="h-8 w-8" />,
+                        path: "/games/counting"
+                      };
+                    } else {
+                      return {
+                        icon: <BookOpen className="h-8 w-8" />,
+                        path: "/games/generic"
+                      };
+                    }
+                  };
 
-                    const gameConfig = getGameConfig(game.name);
+                  const gameConfig = getGameConfig(game.name);
 
-                    return (
-                      <GameCard
-                        key={game._id}
-                        title={game.name}
-                        description={game.subtitle}
-                        icon={gameConfig.icon}
-                        path={gameConfig.path}
-                        isAvailable={true}
-                        level={gameConfig.level}
-                        score={gameConfig.score}
-                        progress={gameConfig.progress}
-                      />
-                    );
-                  })}
-                </div>
-              )}
+                  return (
+                    <GameCard
+                      key={game._id}
+                      title={game.name}
+                      description={game.subtitle}
+                      icon={gameConfig.icon}
+                      path={gameConfig.path}
+                      isAvailable={true}
+                      level={quizInfo?.level || game.level}
+                      score={quizInfo?.score || game.maxScore}
+                      progress={quizInfo ? Math.min(quizInfo.percentage > 100 ? 100 : quizInfo.percentage, 100) : 0}
+                      quizId={game._id}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

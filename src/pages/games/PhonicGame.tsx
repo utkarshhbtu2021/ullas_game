@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, Volume2, RefreshCw, Award } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useVoice } from "../../contexts/VoiceContext";
 import { useUser } from "../../contexts/UserContext";
 import Header from "../../components/Header";
 import Confetti from "react-confetti";
+import { quizAPI } from "../../services/apiService";
 
 interface PhonicQuestion {
   letter: string;
@@ -16,11 +17,52 @@ interface PhonicQuestion {
   correctAnswer: string;
 }
 
+interface ApiQuestion {
+  _id: string;
+  quizId: string;
+  text: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  correctAnswer: string;
+  type: string;
+  level: string;
+  lang: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface QuizAttemptData {
+  quizId: string;
+  quizSet: string;
+  answers: Array<{
+    questionId: string;
+    selectedOption: string;
+    isCorrect: boolean;
+    timeTakenSec: number;
+  }>;
+  score: number;
+  totalQuestions: number;
+  skippedCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  timeTakenSec: number;
+  isCompleted: boolean;
+}
+
 const PhonicGame: React.FC = () => {
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const location = useLocation();
+  const { language, t, setOnLanguageChange } = useLanguage();
   const { speak } = useVoice();
   const { progress, updateProgress } = useUser();
+
+  // Get quizId from location state
+  const quizId = location.state?.quizId;
 
   const [currentLevel, setCurrentLevel] = useState(progress.phonics.level);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -29,109 +71,100 @@ const PhonicGame: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [wrongAnswerSelected, setWrongAnswerSelected] = useState(false);
+  const [questions, setQuestions] = useState<PhonicQuestion[]>([]);
+  const [apiQuestions, setApiQuestions] = useState<ApiQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCount, setIncorrectCount] = useState(0);
+  const [currentApiLevel, setCurrentApiLevel] = useState<string>('');
 
-  const questions: PhonicQuestion[] = [
-    {
-      letter: "A",
-      sound: "अ",
-      word: language === "hi" ? "अ" : "A",
-      image:
-        "https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&cs=tinysrgb&w=400",
-      options: language === "hi" ? ["अ", "क", "स", "म"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "अ" : "A",
-    },
-    {
-      letter: "क",
-      sound: "क",
-      word: language === "hi" ? "क" : "K",
-      image: "",
-      options: language === "hi" ? ["ख", "क", "ग", "च"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "क" : "K",
-    },
-    {
-      letter: "स",
-      sound: "स",
-      word: language === "hi" ? "स" : "S",
-      image: "",
-      options: language === "hi" ? ["श", "स", "र", "ल"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "स" : "S",
-    },
-    {
-      letter: "म",
-      sound: "म",
-      word: language === "hi" ? "म" : "M",
-      image: "",
-      options: language === "hi" ? ["म", "न", "प", "ट"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "म" : "M",
-    },
-    {
-      letter: "ब",
-      sound: "ब",
-      word: language === "hi" ? "ब" : "B",
-      image: "",
-      options: language === "hi" ? ["भ", "ब", "ग", "ज"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "ब" : "B",
-    },
-    {
-      letter: "द",
-      sound: "द",
-      word: language === "hi" ? "द" : "D",
-      image: "",
-      options: language === "hi" ? ["द", "ट", "ल", "ह"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "द" : "D",
-    },
-    {
-      letter: "र",
-      sound: "र",
-      word: language === "hi" ? "र" : "R",
-      image: "",
-      options: language === "hi" ? ["ल", "र", "व", "ज"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "र" : "R",
-    },
-    {
-      letter: "च",
-      sound: "च",
-      word: language === "hi" ? "च" : "C",
-      image: "",
-      options: language === "hi" ? ["च", "क", "ग", "त"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "च" : "C",
-    },
-    {
-      letter: "प",
-      sound: "प",
-      word: language === "hi" ? "प" : "P",
-      image: "",
-      options: language === "hi" ? ["प", "फ", "ब", "न"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "प" : "P",
-    },
-    {
-      letter: "ल",
-      sound: "ल",
-      word: language === "hi" ? "ल" : "L",
-      image: "",
-      options: language === "hi" ? ["व", "ल", "म", "ट"] : ["A", "B", "C", "D"],
-      correctAnswer: language === "hi" ? "ल" : "L",
-    },
-  ];
+  // Set up language change callback to redirect to dashboard
+  useEffect(() => {
+    if (setOnLanguageChange) {
+      setOnLanguageChange(() => (newLang: string) => {
+        navigate('/dashboard');
+      });
+    }
+
+    // Cleanup function to remove the callback when component unmounts
+    return () => {
+      if (setOnLanguageChange) {
+        setOnLanguageChange(undefined);
+      }
+    };
+  }, [navigate, setOnLanguageChange]);
+
+  // Fetch questions from API
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      if (!quizId) {
+        setError('Quiz ID not found');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await quizAPI.getQuestionsByQuizId(quizId);
+        
+        if (response.success && response.data) {
+          setApiQuestions(response.data);
+          
+          // Set the level from the first question
+          if (response.data.length > 0) {
+            setCurrentApiLevel(response.data[0].level);
+          }
+          
+          // Transform API questions to PhonicQuestion format
+          const transformedQuestions: PhonicQuestion[] = response.data.map((apiQuestion: ApiQuestion) => ({
+            letter: apiQuestion.text,
+            sound: apiQuestion.text,
+            word: apiQuestion.text,
+            image: "",
+            options: Object.values(apiQuestion.options), // Convert options object to array
+            correctAnswer: apiQuestion.options[apiQuestion.correctAnswer as keyof typeof apiQuestion.options], // Get the actual value
+          }));
+          
+          setQuestions(transformedQuestions);
+        } else {
+          setError('Failed to fetch questions');
+        }
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+        setError('Failed to load questions. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [quizId]);
 
   useEffect(() => {
-    speak(
-      `${t("phonicsGame")}. ${t("instructions")}: ${t("selectCorrectAnswer")}`
-    );
-    // Speak current question after a short delay
-    setTimeout(() => {
-      speakCurrentQuestion();
-    }, 2000);
-  }, []);
+    if (questions.length > 0) {
+      speak(
+        `${t("phonicsGame")}. ${t("instructions")}: ${t("selectCorrectAnswer")}`
+      );
+      // Speak current question after a short delay
+      setTimeout(() => {
+        speakCurrentQuestion();
+      }, 2000);
+    }
+  }, [questions]);
 
   // Speak question when currentQuestion changes
   useEffect(() => {
-    if (currentQuestion > 0 && !showResult) {
+    if (currentQuestion > 0 && !showResult && questions.length > 0) {
       speakCurrentQuestion();
     }
-  }, [currentQuestion]);
+  }, [currentQuestion, questions]);
 
   const speakCurrentQuestion = () => {
+    if (questions.length === 0) return;
+    
     const question = questions[currentQuestion];
     const instruction =
       language === "hi"
@@ -140,19 +173,65 @@ const PhonicGame: React.FC = () => {
     speak(instruction);
   };
 
-  const handleAnswerSelect = (answer: string) => {
+  const submitQuizAttempt = async (selectedOption: string, isCorrect: boolean) => {
+    if (!quizId || apiQuestions.length === 0) return;
+
+    const currentApiQuestion = apiQuestions[currentQuestion];
+    const isLastQuestion = currentQuestion === questions.length - 1;
+
+    // Find the option key (A, B, C, D) for the selected value
+    const selectedOptionKey = Object.keys(currentApiQuestion.options).find(
+      key => currentApiQuestion.options[key as keyof typeof currentApiQuestion.options] === selectedOption
+    );
+
+    const attemptData: QuizAttemptData = {
+      quizId: quizId,
+      quizSet: currentApiQuestion.type,
+      answers: [
+        {
+          questionId: currentApiQuestion._id,
+          selectedOption: selectedOptionKey || "A",
+          isCorrect: isCorrect,
+          timeTakenSec: 0
+        }
+      ],
+      score: score + (isCorrect ? 10 : 0),
+      totalQuestions: questions.length,
+      skippedCount: 0,
+      correctCount: correctCount + (isCorrect ? 1 : 0),
+      incorrectCount: incorrectCount + (isCorrect ? 0 : 1),
+      timeTakenSec: 0,
+      isCompleted: isLastQuestion
+    };
+
+    try {
+      await quizAPI.submitQuizAttempt(attemptData);
+      console.log('Quiz attempt submitted successfully');
+    } catch (err) {
+      console.error('Error submitting quiz attempt:', err);
+    }
+  };
+
+  const handleAnswerSelect = async (answer: string) => {
+    if (questions.length === 0) return;
+    
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].correctAnswer;
 
     if (isCorrect) {
       setScore(score + 10);
+      setCorrectCount(correctCount + 1);
       speak(t("correct"));
     } else {
+      setIncorrectCount(incorrectCount + 1);
       speak(t("incorrect"));
       setWrongAnswerSelected(true);
     }
 
     setShowResult(true);
+
+    // Submit quiz attempt
+    await submitQuizAttempt(answer, isCorrect);
 
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
@@ -168,6 +247,8 @@ const PhonicGame: React.FC = () => {
   };
 
   const completeGame = () => {
+    if (questions.length === 0) return;
+    
     const finalScore =
       score +
       (selectedAnswer === questions[currentQuestion].correctAnswer ? 10 : 0);
@@ -191,11 +272,74 @@ const PhonicGame: React.FC = () => {
     setShowResult(false);
     setGameCompleted(false);
     setWrongAnswerSelected(false);
+    setCorrectCount(0);
+    setIncorrectCount(0);
     // Speak first question after restart
     setTimeout(() => {
       speakCurrentQuestion();
     }, 1000);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen mainHome__inner dashboard">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className={`text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
+              {language === "hi" ? "प्रश्न लोड हो रहे हैं..." : "Loading questions..."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen mainHome__inner dashboard">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <p className={`text-red-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+              {error}
+            </p>
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            >
+              {language === "hi" ? "डैशबोर्ड पर वापस जाएं" : "Back to Dashboard"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no questions
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen mainHome__inner dashboard">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <p className={`text-gray-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+              {language === "hi" ? "कोई प्रश्न उपलब्ध नहीं है" : "No questions available"}
+            </p>
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            >
+              {language === "hi" ? "डैशबोर्ड पर वापस जाएं" : "Back to Dashboard"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (gameCompleted) {
     return (
@@ -273,7 +417,7 @@ const PhonicGame: React.FC = () => {
                 language === "hi" ? "font-hindi" : "font-english"
               }`}
             >
-              {t("level")} {currentLevel}
+              {t("level")}: {t(currentApiLevel)}
             </div>
             <div
               className={`px-4 py-2 bg-success-100 text-success-700 rounded-full font-medium ${
@@ -325,27 +469,12 @@ const PhonicGame: React.FC = () => {
               >
                 {language === "hi"
                   ? `शब्द को सुनकर सही उत्तर चुने:`
-                  : "Listien the letter and select the correct answer:"}
+                  : "Listen the letter and select the correct answer:"}
               </h2>
-
-              {/* Image */}
-              {/* <div className="mb-6">
-                <img 
-                  src={question.image} 
-                  alt={question.word}
-                  className="w-48 h-48 object-cover rounded-2xl mx-auto shadow-lg"
-                />
-              </div> */}
 
               {/* Word with Sound Button */}
               <div className="flex items-center justify-center space-x-4 mb-8">
-                <h3
-                  className={`text-4xl font-bold text-primary-600 ${
-                    language === "hi" ? "font-hindi" : "font-english"
-                  }`}
-                >
-                  {/* {question.word} */}
-                </h3>
+               
                 <button
                   onClick={() => speak(question.word)}
                   className="p-3 bg-secondary-100 hover:bg-secondary-200 rounded-full transition-colors duration-200"
