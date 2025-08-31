@@ -43,7 +43,7 @@ const Header: React.FC = () => {
               className="ministry-logo"
             />
           </div>
-          <div className="flex justify-end items-center space-x-4">
+          <div className="flex justify-end items-center space-x-4 userOptions">
             {!user && (
               <Link
                 to="/"

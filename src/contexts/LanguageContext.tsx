@@ -15,8 +15,8 @@ interface LanguageContextType {
 
 const content: Record<Language, Content> = {
   en: {
-    welcome: 'Welcome to ULLAS',
-    subtitle: 'Your Journey to Literacy Starts Here',
+    welcome: 'ULLAS - Nav Bharat Saaksharta Karyakram',
+    subtitle: 'Aao Milkar Banayein Bharat ka Jan Jan Saakshar',
     getStarted: 'Get Started',
     login: 'Login',
     register: 'Register',
@@ -121,8 +121,8 @@ const content: Record<Language, Content> = {
     nextLevel: 'अगला स्तर',
     tryAgain: 'फिर कोशिश करें',
     wellDone: 'बहुत अच्छा!',
-    correct: 'सही!',
-    incorrect: 'फिर कोशिश करें',
+    correct: 'सही जवाब!',
+    incorrect: 'गलत जवाब',
     score: 'स्कोर',
     level: 'स्तर',
     selectCorrectAnswer: 'सही उत्तर चुनें',

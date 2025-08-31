@@ -17,6 +17,7 @@ const Register: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSpoken, setHasSpoken] = useState(false);
 
   const navigate = useNavigate();
   const { language, t } = useLanguage();
@@ -128,13 +129,21 @@ const Register: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      speak(t('register'));
-    }, 30000); // 30,000 milliseconds = 30 seconds
+    setHasSpoken(false); // Reset when language changes
+  }, [language]);
 
-    // Cleanup on unmount
-    return () => clearTimeout(timer);
-  }, [speak, t]);
+   useEffect(() => {
+    if (!hasSpoken) {
+      let registerText = "";
+      if (language === "hi") {
+        registerText = "पंजीकरण करें और अपनी शिक्षा यात्रा शुरू करें।";
+      } else {
+        registerText = "Register to start your learning journey.";
+      }
+      speak(registerText, true);
+      setHasSpoken(true);
+    }
+  }, [language, speak, hasSpoken]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({

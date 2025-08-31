@@ -55,13 +55,25 @@
 .userSection .userSection__left p {
   text-shadow: 2px 2px 1px rgba(0, 0, 0, 0.3);
 }
+.gameListHead {
+  display: flex;
+  justify-content: space-between; 
+  margin-bottom: 20px;
+}
+.backButton {
+  max-height: 50px;
+}
+
+
+
+
 
 @media screen and (max-width: 991px) {
   .mainHome {
     padding: 15px;
   }
   .mainHome .mainHome__inner {
-    padding: 20px;
+    padding: 0px 0px 70px 0px;
   }
   .mainHome .mainHome__inner .mainHome__inner-header .container img {
     height: 40px;
@@ -69,24 +81,13 @@
 }
 
 @media screen and (max-width: 600px) {
-    .mainHome {
-        padding: 0;
-    }
-    .mainHome .mainHome__inner {
-        border-radius: 0px;
-        padding: 0;
-    }
-     
-    .mainHome .mainHome__inner .mainHome__inner-header {
-        padding: 20px;
-        border-radius: 0px;
-    }
+    
 }
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 991px) {
     .homeFooter .homeFooterLogos{
         flex-direction: column;
     }
-    .mainHome .mainHome__inner .mainHeader .userOptions {
+    .userOptions {
         position: fixed;
         bottom: 0px;
         left: 0px;
@@ -103,12 +104,25 @@
         justify-content: space-between;
         width: 100%;
     }
-}
-@media screen and (max-width: 600px) {
+    .mainHome {
+        padding: 0;
+    }
+    .mainHome .mainHome__inner {
+        border-radius: 0px;
+        padding: 0px 0px 70px 0px;
+    }
+     
+    .mainHome .mainHome__inner .mainHome__inner-header {
+        padding: 20px;
+        border-radius: 0px;
+    }
     .userOptions button svg {
         width: 20px;
         height: 20px;
     }
+}
+@media screen and (max-width: 600px) {
+    
 }
 @media screen and (max-width: 480px) {
      

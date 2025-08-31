@@ -19,14 +19,35 @@ const Welcome: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
+    setHasSpoken(false); // Reset when language changes
+  }, [language]);
+
+  useEffect(() => {
     if (!hasSpoken) {
-      const timer = setTimeout(() => {
-        speak(t("welcome") + ". " + t("subtitle"));
-        setHasSpoken(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+      let welcomeText = "";
+      if (language === "hi") {
+        welcomeText =
+          "उल्लास - नव भारत साक्षरता कार्यक्रम। आओ मिलकर बनायें भारत का जन जन साक्षर। आगे बढ़ने के लिए लॉगिन करें। अगर आपने अभी तक पंजीकरण नहीं किया है, तो नया पंजीकरण करें।";
+      } else {
+        welcomeText =
+          "Ullas - Nav Bharat Saksharta Karyakram. Come, let's make every Indian literate together. Login to continue. If you haven’t registered yet, please complete your registration.";
+      }
+      speak(welcomeText, true);
+      setHasSpoken(true);
     }
-  }, [speak, t, hasSpoken]);
+    // Only run on mount and when language changes
+  }, [language, speak, hasSpoken]);
+
+
+  // useEffect(() => {
+  //   if (!hasSpoken) {
+  //     const timer = setTimeout(() => {
+  //       speak(t("welcome") + ". " + t("subtitle"));
+  //       setHasSpoken(true);
+  //     }, 1000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [speak, t, hasSpoken]);
 
   const handleLanguageToggle = () => {
     const newLang = language === "en" ? "hi" : "en";
@@ -39,6 +60,7 @@ const Welcome: React.FC = () => {
     speak(isEnabled ? "Voice disabled" : "Voice enabled", true);
   };
 
+  
   const features = [
     {
       id: "interactive-games",
@@ -77,60 +99,58 @@ const Welcome: React.FC = () => {
       {/* Header with Language and Voice Controls */}
       <div className="mainHome__inner-header">
         <div className="container">
-        <div className="flex justify-between items-center row">
-          <div className="flex justify-center">
-            <img
-              src="/public/images/logos/ullas-logo.svg"
-              alt="ULLAS Logo"
-              className="ullas-logo"
-            />
-            <img
-              src="/public/images/logos/ministry-of-education-logo.svg"
-              alt="ULLAS Logo"
-              className="ministry-logo"
-            />
-          </div>
-          <div className="flex justify-end items-center space-x-4">
-            <button
-              onClick={handleLanguageToggle}
-              className="p-3 flex items-center rounded-full bg-secondary-100 hover:bg-secondary-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500"
-              aria-label="Toggle Language"
-            >
-              <Globe className="h-6 w-6 text-secondary-600" />
-              <span
-                className={`ml-2 text-sm font-medium text-secondary-600 ${
-                  language === "hi" ? "font-hindi" : "font-english"
-                }`}
+          <div className="flex justify-between items-center row">
+            <div className="flex justify-center logoSection">
+              <img
+                src="/public/images/logos/ullas-logo.svg"
+                alt="ULLAS Logo"
+                className="ullas-logo"
+              />
+              <img
+                src="/public/images/logos/ministry-of-education-logo.svg"
+                alt="ULLAS Logo"
+                className="ministry-logo"
+              />
+            </div>
+            <div className="flex justify-end items-center space-x-4 userOptions">
+              <button
+                onClick={handleLanguageToggle}
+                className="p-3 flex items-center rounded-full bg-secondary-100 hover:bg-secondary-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                aria-label="Toggle Language"
               >
-                {language === "en" ? "हिं" : "EN"}
-              </span>
-            </button>
+                <Globe className="h-6 w-6 text-secondary-600" />
+                <span
+                  className={`ml-2 text-sm font-medium text-secondary-600 ${
+                    language === "hi" ? "font-hindi" : "font-english"
+                  }`}
+                >
+                  {language === "en" ? "हिं" : "EN"}
+                </span>
+              </button>
 
-            <button
-              onClick={handleVoiceToggle}
-              className={`p-3 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 ${
-                isEnabled
-                  ? "bg-success-100 hover:bg-success-200 focus:ring-success-500"
-                  : "bg-gray-100 hover:bg-gray-200 focus:ring-gray-500"
-              }`}
-              aria-label="Toggle Voice"
-            >
-              {isEnabled ? (
-                <Volume2 className="h-6 w-6 text-success-600" />
-              ) : (
-                <VolumeX className="h-6 w-6 text-gray-600" />
-              )}
-            </button>
+              <button
+                onClick={handleVoiceToggle}
+                className={`p-3 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 ${
+                  isEnabled
+                    ? "bg-success-100 hover:bg-success-200 focus:ring-success-500"
+                    : "bg-gray-100 hover:bg-gray-200 focus:ring-gray-500"
+                }`}
+                aria-label="Toggle Voice"
+              >
+                {isEnabled ? (
+                  <Volume2 className="h-6 w-6 text-success-600" />
+                ) : (
+                  <VolumeX className="h-6 w-6 text-gray-600" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-      </div>
-      
 
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-16"> 
-
+        <div className="text-center mb-16">
           <h1
             style={{ lineHeight: "1.5" }}
             className={`
@@ -214,8 +234,8 @@ const Welcome: React.FC = () => {
         </div>
 
         {/* Partnership Section */}
-        <div className="bg-white rounded-3xl p-8 shadow-lg text-center">
-          <div className="flex justify-center items-center space-x-6 mb-6">
+        <div className="bg-white rounded-3xl p-8 shadow-lg text-center homeFooter">
+          <div className="flex justify-center items-center space-x-6 mb-6 homeFooterLogos">
             <img
               src="https://ullas.education.gov.in/portal/images/logos/school_edu_logo.svg"
               alt="Ministry of Education"

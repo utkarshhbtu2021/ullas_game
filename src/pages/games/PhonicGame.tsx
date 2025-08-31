@@ -77,13 +77,24 @@ const PhonicGame: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
-  const [currentApiLevel, setCurrentApiLevel] = useState<string>('');
+  const [currentApiLevel, setCurrentApiLevel] = useState<string>("");
+
+  const speakLetterClearly = () => {
+  let phrase = "";
+  if (language === "hi") {
+    phrase = `कृपया ध्यान से सुनें, यह अक्षर है: ${question.word}`;
+  } else {
+    phrase = `Please listen carefully, this letter is: ${question.word}`;
+  }
+  // Speak slowly for clarity
+  speak(phrase, true, { rate: 0.7 });
+};
 
   // Set up language change callback to redirect to dashboard
   useEffect(() => {
     if (setOnLanguageChange) {
       setOnLanguageChange(() => (newLang: string) => {
-        navigate('/dashboard');
+        navigate("/dashboard");
       });
     }
 
@@ -99,7 +110,7 @@ const PhonicGame: React.FC = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!quizId) {
-        setError('Quiz ID not found');
+        setError("Quiz ID not found");
         setLoading(false);
         return;
       }
@@ -107,34 +118,39 @@ const PhonicGame: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await quizAPI.getQuestionsByQuizId(quizId);
-        
+
         if (response.success && response.data) {
           setApiQuestions(response.data);
-          
+
           // Set the level from the first question
           if (response.data.length > 0) {
             setCurrentApiLevel(response.data[0].level);
           }
-          
+
           // Transform API questions to PhonicQuestion format
-          const transformedQuestions: PhonicQuestion[] = response.data.map((apiQuestion: ApiQuestion) => ({
-            letter: apiQuestion.text,
-            sound: apiQuestion.text,
-            word: apiQuestion.text,
-            image: "",
-            options: Object.values(apiQuestion.options), // Convert options object to array
-            correctAnswer: apiQuestion.options[apiQuestion.correctAnswer as keyof typeof apiQuestion.options], // Get the actual value
-          }));
-          
+          const transformedQuestions: PhonicQuestion[] = response.data.map(
+            (apiQuestion: ApiQuestion) => ({
+              letter: apiQuestion.text,
+              sound: apiQuestion.text,
+              word: apiQuestion.text,
+              image: "",
+              options: Object.values(apiQuestion.options), // Convert options object to array
+              correctAnswer:
+                apiQuestion.options[
+                  apiQuestion.correctAnswer as keyof typeof apiQuestion.options
+                ], // Get the actual value
+            })
+          );
+
           setQuestions(transformedQuestions);
         } else {
-          setError('Failed to fetch questions');
+          setError("Failed to fetch questions");
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
-        setError('Failed to load questions. Please try again.');
+        console.error("Error fetching questions:", err);
+        setError("Failed to load questions. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -164,7 +180,7 @@ const PhonicGame: React.FC = () => {
 
   const speakCurrentQuestion = () => {
     if (questions.length === 0) return;
-    
+
     const question = questions[currentQuestion];
     const instruction =
       language === "hi"
@@ -173,7 +189,10 @@ const PhonicGame: React.FC = () => {
     speak(instruction);
   };
 
-  const submitQuizAttempt = async (selectedOption: string, isCorrect: boolean) => {
+  const submitQuizAttempt = async (
+    selectedOption: string,
+    isCorrect: boolean
+  ) => {
     if (!quizId || apiQuestions.length === 0) return;
 
     const currentApiQuestion = apiQuestions[currentQuestion];
@@ -181,7 +200,10 @@ const PhonicGame: React.FC = () => {
 
     // Find the option key (A, B, C, D) for the selected value
     const selectedOptionKey = Object.keys(currentApiQuestion.options).find(
-      key => currentApiQuestion.options[key as keyof typeof currentApiQuestion.options] === selectedOption
+      (key) =>
+        currentApiQuestion.options[
+          key as keyof typeof currentApiQuestion.options
+        ] === selectedOption
     );
 
     const attemptData: QuizAttemptData = {
@@ -192,8 +214,8 @@ const PhonicGame: React.FC = () => {
           questionId: currentApiQuestion._id,
           selectedOption: selectedOptionKey || "A",
           isCorrect: isCorrect,
-          timeTakenSec: 0
-        }
+          timeTakenSec: 0,
+        },
       ],
       score: score + (isCorrect ? 10 : 0),
       totalQuestions: questions.length,
@@ -201,20 +223,20 @@ const PhonicGame: React.FC = () => {
       correctCount: correctCount + (isCorrect ? 1 : 0),
       incorrectCount: incorrectCount + (isCorrect ? 0 : 1),
       timeTakenSec: 0,
-      isCompleted: isLastQuestion
+      isCompleted: isLastQuestion,
     };
 
     try {
       await quizAPI.submitQuizAttempt(attemptData);
-      console.log('Quiz attempt submitted successfully');
+      console.log("Quiz attempt submitted successfully");
     } catch (err) {
-      console.error('Error submitting quiz attempt:', err);
+      console.error("Error submitting quiz attempt:", err);
     }
   };
 
   const handleAnswerSelect = async (answer: string) => {
     if (questions.length === 0) return;
-    
+
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].correctAnswer;
 
@@ -248,7 +270,7 @@ const PhonicGame: React.FC = () => {
 
   const completeGame = () => {
     if (questions.length === 0) return;
-    
+
     const finalScore =
       score +
       (selectedAnswer === questions[currentQuestion].correctAnswer ? 10 : 0);
@@ -288,8 +310,14 @@ const PhonicGame: React.FC = () => {
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <p className={`text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-              {language === "hi" ? "प्रश्न लोड हो रहे हैं..." : "Loading questions..."}
+            <p
+              className={`text-lg ${
+                language === "hi" ? "font-hindi" : "font-english"
+              }`}
+            >
+              {language === "hi"
+                ? "प्रश्न लोड हो रहे हैं..."
+                : "Loading questions..."}
             </p>
           </div>
         </div>
@@ -304,14 +332,22 @@ const PhonicGame: React.FC = () => {
         <Header />
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
-            <p className={`text-red-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+            <p
+              className={`text-red-500 text-lg mb-4 ${
+                language === "hi" ? "font-hindi" : "font-english"
+              }`}
+            >
               {error}
             </p>
-            <button 
+            <button
               onClick={() => navigate("/dashboard")}
-              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
+                language === "hi" ? "font-hindi" : "font-english"
+              }`}
             >
-              {language === "hi" ? "डैशबोर्ड पर वापस जाएं" : "Back to Dashboard"}
+              {language === "hi"
+                ? "डैशबोर्ड पर वापस जाएं"
+                : "Back to Dashboard"}
             </button>
           </div>
         </div>
@@ -326,14 +362,24 @@ const PhonicGame: React.FC = () => {
         <Header />
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
-            <p className={`text-gray-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
-              {language === "hi" ? "कोई प्रश्न उपलब्ध नहीं है" : "No questions available"}
-            </p>
-            <button 
-              onClick={() => navigate("/dashboard")}
-              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            <p
+              className={`text-gray-500 text-lg mb-4 ${
+                language === "hi" ? "font-hindi" : "font-english"
+              }`}
             >
-              {language === "hi" ? "डैशबोर्ड पर वापस जाएं" : "Back to Dashboard"}
+              {language === "hi"
+                ? "कोई प्रश्न उपलब्ध नहीं है"
+                : "No questions available"}
+            </p>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
+                language === "hi" ? "font-hindi" : "font-english"
+              }`}
+            >
+              {language === "hi"
+                ? "डैशबोर्ड पर वापस जाएं"
+                : "Back to Dashboard"}
             </button>
           </div>
         </div>
@@ -474,9 +520,8 @@ const PhonicGame: React.FC = () => {
 
               {/* Word with Sound Button */}
               <div className="flex items-center justify-center space-x-4 mb-8">
-               
                 <button
-                  onClick={() => speak(question.word)}
+                  onClick={speakLetterClearly}
                   className="p-3 bg-secondary-100 hover:bg-secondary-200 rounded-full transition-colors duration-200"
                   title={t("tapToHear")}
                 >
@@ -509,16 +554,18 @@ const PhonicGame: React.FC = () => {
                   `}
                 >
                   {option}
-                  {showResult && option === question.correctAnswer && !wrongAnswerSelected && (
-                    <div className="absolute inset-0 pointer-events-none z-10">
-                      <Confetti
-                        numberOfPieces={300}
-                        recycle={false}
-                        width={216}
-                        height={80}
-                      />
-                    </div>
-                  )}
+                  {showResult &&
+                    option === question.correctAnswer &&
+                    !wrongAnswerSelected && (
+                      <div className="absolute inset-0 pointer-events-none z-10">
+                        <Confetti
+                          numberOfPieces={300}
+                          recycle={false}
+                          width={216}
+                          height={80}
+                        />
+                      </div>
+                    )}
                 </button>
               ))}
             </div>
