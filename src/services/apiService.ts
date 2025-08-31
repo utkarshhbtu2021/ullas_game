@@ -197,6 +197,43 @@ export const quizAPI = {
     );
     return response.data;
   },
+  submitQuizAttempt: async (attemptData: {
+    quizId: string;
+    quizSet: string;
+    answers: Array<{
+      questionId: string;
+      selectedOption: string;
+      isCorrect: boolean;
+      timeTakenSec: number;
+    }>;
+    score: number;
+    totalQuestions: number;
+    skippedCount: number;
+    correctCount: number;
+    incorrectCount: number;
+    timeTakenSec: number;
+    isCompleted: boolean;
+  }): Promise<ApiResponse> => {
+    const response = await axiosInstance.post<ApiResponse>(
+      '/quiz-attempts',
+      attemptData
+    );
+    return response.data;
+  },
+
+  // Get all quizzes
+  getQuizzes: async (): Promise<ApiResponse> => {
+    const response = await axiosInstance.get<ApiResponse>('/quizzes');
+    return response.data;
+  },
+
+  // Get games by quiz ID
+  getGamesByQuizId: async (quizId: string): Promise<ApiResponse> => {
+    const response = await axiosInstance.get<ApiResponse>(
+      `/quizzes/quiz/${quizId}`
+    );
+    return response.data;
+  },
 };
 
 // Error handling utility

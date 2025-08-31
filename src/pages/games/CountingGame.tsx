@@ -157,6 +157,8 @@ const CountingGame: React.FC = () => {
             }
           );
 
+          console.log(transformedQuestions, 'transformedQuestions');
+
           setQuestions(transformedQuestions);
         } else {
           setError(t('incorrect'));
@@ -259,11 +261,11 @@ const CountingGame: React.FC = () => {
           timeTakenSec: 0,
         },
       ],
-      score: score + (isCorrect ? 10 : 0),
+      score: (isCorrect ? 10 : 0),
       totalQuestions: questions.length,
       skippedCount: 0,
-      correctCount: correctCount + (isCorrect ? 1 : 0),
-      incorrectCount: incorrectCount + (isCorrect ? 0 : 1),
+      correctCount: (isCorrect ? 1 : 0),
+      incorrectCount: (isCorrect ? 0 : 1),
       timeTakenSec: 0,
       isCompleted: isLastQuestion,
     };
