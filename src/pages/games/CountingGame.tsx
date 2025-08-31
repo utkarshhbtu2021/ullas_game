@@ -105,41 +105,58 @@ const CountingGame: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await quizAPI.getQuestionsByQuizId(quizId);
-        
+
+        const response = await quizAPI.getQuestionsByQuizId(quizId, language);
+
         if (response.success && response.data) {
           setApiQuestions(response.data);
-          
+
           // Set the level from the first question
           if (response.data.length > 0) {
             setCurrentApiLevel(response.data[0].level);
           }
-          
+
           // Transform API questions to CountingQuestion format
-          const transformedQuestions: CountingQuestion[] = response.data.map((apiQuestion: ApiQuestion) => {
-            // Extract emojis from text and create items array
-            const emojis = [...apiQuestion.text];
-            const uniqueEmojis = [...new Set(emojis)];
-            const items = Array.from({ length: emojis.length }, () => uniqueEmojis[0]);
-            
-            // Convert options object to number array
-            const optionsArray = Object.values(apiQuestion.options).map(option => {
-              // Convert Devanagari numerals to Arabic numerals
-              const devanagariToArabic: { [key: string]: number } = {
-                '०': 0, '१': 1, '२': 2, '३': 3, '४': 4, '५': 5, 
-                '६': 6, '७': 7, '८': 8, '९': 9, '१०': 10, '११': 11
+          const transformedQuestions: CountingQuestion[] = response.data.map(
+            (apiQuestion: ApiQuestion) => {
+              // Extract emojis from text and create items array
+              const emojis = [...apiQuestion.text];
+              const uniqueEmojis = [...new Set(emojis)];
+              const items = Array.from(
+                { length: emojis.length },
+                () => uniqueEmojis[0]
+              );
+
+              // Convert options object to number array
+              const optionsArray = Object.values(apiQuestion.options).map(
+                (option) => {
+                  // Convert Devanagari numerals to Arabic numerals
+                  const devanagariToArabic: { [key: string]: number } = {
+                    '०': 0,
+                    '१': 1,
+                    '२': 2,
+                    '३': 3,
+                    '४': 4,
+                    '५': 5,
+                    '६': 6,
+                    '७': 7,
+                    '८': 8,
+                    '९': 9,
+                    '१०': 10,
+                    '११': 11,
+                  };
+                  return devanagariToArabic[option] || parseInt(option) || 0;
+                }
+              );
+
+              return {
+                items: items,
+                count: emojis.length,
+                options: optionsArray,
               };
-              return devanagariToArabic[option] || parseInt(option) || 0;
-            });
-            
-            return {
-              items: items,
-              count: emojis.length,
-              options: optionsArray
-            };
-          });
-          
+            }
+          );
+
           setQuestions(transformedQuestions);
         } else {
           setError(t('incorrect'));
@@ -159,7 +176,11 @@ const CountingGame: React.FC = () => {
   useEffect(() => {
     if (questions.length > 0 && !hasSpokenInitial.current) {
       hasSpokenInitial.current = true;
-      speak(`${t('countingGame')}. ${t('instructions')}: ${t('selectCorrectAnswer')}`);
+      speak(
+        `${t('countingGame')}. ${t('instructions')}: ${t(
+          'selectCorrectAnswer'
+        )}`
+      );
       // Speak current question after a short delay
       setTimeout(() => {
         speakCurrentQuestion();
@@ -169,26 +190,31 @@ const CountingGame: React.FC = () => {
 
   // Speak question when currentQuestion changes (but not on initial load)
   useEffect(() => {
-    if (hasSpokenCurrentQuestion.current !== currentQuestion && 
-        hasSpokenInitial.current && 
-        !showResult && 
-        questions.length > 0 && 
-        currentQuestion > 0) {
+    if (
+      hasSpokenCurrentQuestion.current !== currentQuestion &&
+      hasSpokenInitial.current &&
+      !showResult &&
+      questions.length > 0 &&
+      currentQuestion > 0
+    ) {
       speakCurrentQuestion();
     }
   }, [currentQuestion, questions, showResult]);
 
   const speakCurrentQuestion = () => {
     if (questions.length === 0) return;
-    
+
     // Update the ref to track which question we've spoken
     hasSpokenCurrentQuestion.current = currentQuestion;
-    
+
     const instruction = t('selectCorrectAnswer');
     speak(instruction);
   };
 
-  const submitQuizAttempt = async (selectedOption: number, isCorrect: boolean) => {
+  const submitQuizAttempt = async (
+    selectedOption: number,
+    isCorrect: boolean
+  ) => {
     if (!quizId || apiQuestions.length === 0) return;
 
     const currentApiQuestion = apiQuestions[currentQuestion];
@@ -196,13 +222,29 @@ const CountingGame: React.FC = () => {
 
     // Find the option key (A, B, C, D) for the selected value
     const selectedOptionKey = Object.keys(currentApiQuestion.options).find(
-      key => {
+      (key) => {
         const devanagariToArabic: { [key: string]: number } = {
-          '०': 0, '१': 1, '२': 2, '३': 3, '४': 4, '५': 5, 
-          '६': 6, '७': 7, '८': 8, '९': 9, '१०': 10, '११': 11
+          '०': 0,
+          '१': 1,
+          '२': 2,
+          '३': 3,
+          '४': 4,
+          '५': 5,
+          '६': 6,
+          '७': 7,
+          '८': 8,
+          '९': 9,
+          '१०': 10,
+          '११': 11,
         };
-        const optionValue = currentApiQuestion.options[key as keyof typeof currentApiQuestion.options];
-        return (devanagariToArabic[optionValue] || parseInt(optionValue)) === selectedOption;
+        const optionValue =
+          currentApiQuestion.options[
+            key as keyof typeof currentApiQuestion.options
+          ];
+        return (
+          (devanagariToArabic[optionValue] || parseInt(optionValue)) ===
+          selectedOption
+        );
       }
     );
 
@@ -212,10 +254,10 @@ const CountingGame: React.FC = () => {
       answers: [
         {
           questionId: currentApiQuestion._id,
-          selectedOption: selectedOptionKey || "A",
+          selectedOption: selectedOptionKey || 'A',
           isCorrect: isCorrect,
-          timeTakenSec: 0
-        }
+          timeTakenSec: 0,
+        },
       ],
       score: score + (isCorrect ? 10 : 0),
       totalQuestions: questions.length,
@@ -223,7 +265,7 @@ const CountingGame: React.FC = () => {
       correctCount: correctCount + (isCorrect ? 1 : 0),
       incorrectCount: incorrectCount + (isCorrect ? 0 : 1),
       timeTakenSec: 0,
-      isCompleted: isLastQuestion
+      isCompleted: isLastQuestion,
     };
 
     try {
@@ -236,25 +278,27 @@ const CountingGame: React.FC = () => {
 
   const handleAnswerSelect = async (answer: number) => {
     if (questions.length === 0) return;
-    
+
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].count;
-    
+
     if (isCorrect) {
       setScore(score + 10);
       setCorrectCount(correctCount + 1);
       speak(`${t('correct')}! ${answer}`);
     } else {
       setIncorrectCount(incorrectCount + 1);
-      speak(`${t('incorrect')} ${t('correct')} ${questions[currentQuestion].count}`);
+      speak(
+        `${t('incorrect')} ${t('correct')} ${questions[currentQuestion].count}`
+      );
       setWrongAnswerSelected(true);
     }
-    
+
     setShowResult(true);
-    
+
     // Submit quiz attempt
     await submitQuizAttempt(answer, isCorrect);
-    
+
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
@@ -270,17 +314,18 @@ const CountingGame: React.FC = () => {
 
   const completeGame = () => {
     if (questions.length === 0) return;
-    
-    const finalScore = score + (selectedAnswer === questions[currentQuestion].count ? 10 : 0);
+
+    const finalScore =
+      score + (selectedAnswer === questions[currentQuestion].count ? 10 : 0);
     const newLevel = Math.min(currentLevel + 1, 5);
     const completed = newLevel >= 5;
-    
+
     updateProgress('counting', {
       level: newLevel,
       score: Math.max(progress.counting.score, finalScore),
-      completed
+      completed,
     });
-    
+
     setGameCompleted(true);
     speak(`${t('wellDone')}! ${t('score')}: ${finalScore}`);
   };
@@ -294,15 +339,19 @@ const CountingGame: React.FC = () => {
     setWrongAnswerSelected(false);
     setCorrectCount(0);
     setIncorrectCount(0);
-    
+
     // Reset speech tracking refs
     hasSpokenInitial.current = false;
     hasSpokenCurrentQuestion.current = -1;
-    
+
     // Speak initial instructions after restart
     setTimeout(() => {
       hasSpokenInitial.current = true;
-      speak(`${t('countingGame')}. ${t('instructions')}: ${t('selectCorrectAnswer')}`);
+      speak(
+        `${t('countingGame')}. ${t('instructions')}: ${t(
+          'selectCorrectAnswer'
+        )}`
+      );
       setTimeout(() => {
         speakCurrentQuestion();
       }, 2000);
@@ -317,8 +366,14 @@ const CountingGame: React.FC = () => {
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <p className={`text-lg ${language === "hi" ? "font-hindi" : "font-english"}`}>
-              {language === "hi" ? "प्रश्न लोड हो रहे हैं..." : "Loading questions..."}
+            <p
+              className={`text-lg ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
+              {language === 'hi'
+                ? 'प्रश्न लोड हो रहे हैं...'
+                : 'Loading questions...'}
             </p>
           </div>
         </div>
@@ -333,12 +388,18 @@ const CountingGame: React.FC = () => {
         <Header />
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
-            <p className={`text-red-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
+            <p
+              className={`text-red-500 text-lg mb-4 ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {error}
             </p>
-            <button 
-              onClick={() => navigate("/dashboard")}
-              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
             >
               {t('backToDashboard')}
             </button>
@@ -355,12 +416,20 @@ const CountingGame: React.FC = () => {
         <Header />
         <div className="container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
-            <p className={`text-gray-500 text-lg mb-4 ${language === "hi" ? "font-hindi" : "font-english"}`}>
-              {language === "hi" ? "कोई प्रश्न उपलब्ध नहीं है" : "No questions available"}
+            <p
+              className={`text-gray-500 text-lg mb-4 ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
+              {language === 'hi'
+                ? 'कोई प्रश्न उपलब्ध नहीं है'
+                : 'No questions available'}
             </p>
-            <button 
-              onClick={() => navigate("/dashboard")}
-              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${language === "hi" ? "font-hindi" : "font-english"}`}
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
             >
               {t('backToDashboard')}
             </button>
@@ -379,22 +448,34 @@ const CountingGame: React.FC = () => {
             <div className="w-20 h-20 bg-gradient-to-br from-success-500 to-success-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <Award className="h-10 w-10 text-white" />
             </div>
-            <h2 className={`text-3xl font-bold text-gray-800 mb-4 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <h2
+              className={`text-3xl font-bold text-gray-800 mb-4 ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {t('wellDone')}
             </h2>
-            <p className={`text-lg text-gray-600 mb-6 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <p
+              className={`text-lg text-gray-600 mb-6 ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {t('score')}: {score}
             </p>
             <div className="flex flex-col space-y-4">
               <button
                 onClick={restartGame}
-                className={`px-6 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors duration-200 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}
+                className={`px-6 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors duration-200 ${
+                  language === 'hi' ? 'font-hindi' : 'font-english'
+                }`}
               >
                 {t('tryAgain')}
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
-                className={`px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}
+                className={`px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 ${
+                  language === 'hi' ? 'font-hindi' : 'font-english'
+                }`}
               >
                 {t('backToDashboard')}
               </button>
@@ -410,7 +491,7 @@ const CountingGame: React.FC = () => {
   return (
     <div className="min-h-screen mainHome__inner dashboard">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Game Header */}
         <div className="flex items-center justify-between mb-8">
@@ -419,16 +500,28 @@ const CountingGame: React.FC = () => {
             className="flex items-center space-x-2 px-4 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow duration-200"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
-            <span className={`text-gray-600 font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <span
+              className={`text-gray-600 font-medium ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {t('backToDashboard')}
             </span>
           </button>
-          
+
           <div className="flex items-center space-x-4">
-            <div className={`px-4 py-2 bg-primary-100 text-primary-700 rounded-full font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <div
+              className={`px-4 py-2 bg-primary-100 text-primary-700 rounded-full font-medium ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {t('level')}: {t(currentApiLevel)}
             </div>
-            <div className={`px-4 py-2 bg-success-100 text-success-700 rounded-full font-medium ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <div
+              className={`px-4 py-2 bg-success-100 text-success-700 rounded-full font-medium ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {t('score')}: {score}
             </div>
           </div>
@@ -437,17 +530,27 @@ const CountingGame: React.FC = () => {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className={`text-sm text-gray-600 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <span
+              className={`text-sm text-gray-600 ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {t('progress')}
             </span>
-            <span className={`text-sm text-gray-600 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+            <span
+              className={`text-sm text-gray-600 ${
+                language === 'hi' ? 'font-hindi' : 'font-english'
+              }`}
+            >
               {currentQuestion + 1} / {questions.length}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
+            <div
               className="bg-gradient-to-r from-warning-500 to-success-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+              style={{
+                width: `${((currentQuestion + 1) / questions.length) * 100}%`,
+              }}
             ></div>
           </div>
         </div>
@@ -457,10 +560,16 @@ const CountingGame: React.FC = () => {
           <div className="bg-white rounded-3xl shadow-xl p-8">
             {/* Question */}
             <div className="text-center mb-8">
-              <h2 className={`text-2xl font-bold text-gray-800 mb-6 ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
-                {language === 'hi' ? 'इन चीजों को गिनें:' : 'Count these items:'}
+              <h2
+                className={`text-2xl font-bold text-gray-800 mb-6 ${
+                  language === 'hi' ? 'font-hindi' : 'font-english'
+                }`}
+              >
+                {language === 'hi'
+                  ? 'इन चीजों को गिनें:'
+                  : 'Count these items:'}
               </h2>
-              
+
               {/* Items to Count */}
               <div className="mb-8 p-8 bg-gradient-to-br from-warning-50 to-orange-50 rounded-2xl border-2 border-warning-200">
                 <div className="flex flex-wrap justify-center items-center gap-4">
@@ -486,30 +595,35 @@ const CountingGame: React.FC = () => {
                   disabled={showResult}
                   className={`
                     p-6 rounded-2xl font-bold text-3xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 relative overflow-hidden
-                    ${showResult && option === question.count
-                      ? 'bg-success-500 text-white shadow-lg animate-pulse-slow'
-                      : showResult && option === selectedAnswer && option !== question.count
-                      ? 'bg-error-500 text-white shadow-lg'
-                      : showResult
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-br from-warning-100 to-warning-200 text-warning-700 hover:from-warning-200 hover:to-warning-300 shadow-md hover:shadow-lg focus:ring-warning-300'
+                    ${
+                      showResult && option === question.count
+                        ? 'bg-success-500 text-white shadow-lg animate-pulse-slow'
+                        : showResult &&
+                          option === selectedAnswer &&
+                          option !== question.count
+                        ? 'bg-error-500 text-white shadow-lg'
+                        : showResult
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-warning-100 to-warning-200 text-warning-700 hover:from-warning-200 hover:to-warning-300 shadow-md hover:shadow-lg focus:ring-warning-300'
                     }
                     ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
                 >
                   {option}
-                  
+
                   {/* Confetti inside correct answer button */}
-                  {showResult && option === question.count && !wrongAnswerSelected && (
-                    <div className="absolute inset-0 pointer-events-none z-10">
-                      <Confetti
-                        numberOfPieces={500}
-                        recycle={false}
-                        width={216}
-                        height={80}
-                      />
-                    </div>
-                  )}
+                  {showResult &&
+                    option === question.count &&
+                    !wrongAnswerSelected && (
+                      <div className="absolute inset-0 pointer-events-none z-10">
+                        <Confetti
+                          numberOfPieces={500}
+                          recycle={false}
+                          width={216}
+                          height={80}
+                        />
+                      </div>
+                    )}
 
                   {!showResult && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 transform -skew-x-12"></div>
@@ -521,20 +635,26 @@ const CountingGame: React.FC = () => {
             {/* Result Feedback */}
             {showResult && (
               <div className="text-center mt-8">
-                <div className={`inline-flex items-center space-x-2 px-6 py-3 rounded-full font-medium animate-bounce-slow ${
-                  selectedAnswer === question.count
-                    ? 'bg-success-100 text-success-700'
-                    : 'bg-error-100 text-error-700'
-                } ${language === 'hi' ? 'font-hindi' : 'font-english'}`}>
+                <div
+                  className={`inline-flex items-center space-x-2 px-6 py-3 rounded-full font-medium animate-bounce-slow ${
+                    selectedAnswer === question.count
+                      ? 'bg-success-100 text-success-700'
+                      : 'bg-error-100 text-error-700'
+                  } ${language === 'hi' ? 'font-hindi' : 'font-english'}`}
+                >
                   {selectedAnswer === question.count ? (
                     <>
                       <Award className="h-5 w-5" />
-                      <span>{t('correct')}! {selectedAnswer}</span>
+                      <span>
+                        {t('correct')}! {selectedAnswer}
+                      </span>
                     </>
                   ) : (
                     <>
                       <RefreshCw className="h-5 w-5" />
-                      <span>{t('incorrect')} - {t('correct')}: {question.count}</span>
+                      <span>
+                        {t('incorrect')} - {t('correct')}: {question.count}
+                      </span>
                     </>
                   )}
                 </div>

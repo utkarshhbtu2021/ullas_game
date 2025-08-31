@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { ArrowLeft, Volume2, RefreshCw, Award } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useLanguage } from "../../contexts/LanguageContext";
-import { useVoice } from "../../contexts/VoiceContext";
-import { useUser } from "../../contexts/UserContext";
-import Header from "../../components/Header";
-import Confetti from "react-confetti";
-import { quizAPI } from "../../services/apiService";
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Volume2, RefreshCw, Award } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useVoice } from '../../contexts/VoiceContext';
+import { useUser } from '../../contexts/UserContext';
+import Header from '../../components/Header';
+import Confetti from 'react-confetti';
+import { quizAPI } from '../../services/apiService';
 
 interface PhonicQuestion {
   letter: string;
@@ -77,24 +77,24 @@ const PhonicGame: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
-  const [currentApiLevel, setCurrentApiLevel] = useState<string>("");
+  const [currentApiLevel, setCurrentApiLevel] = useState<string>('');
 
   const speakLetterClearly = () => {
-  let phrase = "";
-  if (language === "hi") {
-    phrase = `कृपया ध्यान से सुनें, यह अक्षर है: ${question.word}`;
-  } else {
-    phrase = `Please listen carefully, this letter is: ${question.word}`;
-  }
-  // Speak slowly for clarity
-  speak(phrase, true, { rate: 0.7 });
-};
+    let phrase = '';
+    if (language === 'hi') {
+      phrase = `कृपया ध्यान से सुनें, यह अक्षर है: ${question.word}`;
+    } else {
+      phrase = `Please listen carefully, this letter is: ${question.word}`;
+    }
+    // Speak slowly for clarity
+    speak(phrase, true, { rate: 0.7 });
+  };
 
   // Set up language change callback to redirect to dashboard
   useEffect(() => {
     if (setOnLanguageChange) {
       setOnLanguageChange(() => (newLang: string) => {
-        navigate("/dashboard");
+        navigate('/dashboard');
       });
     }
 
@@ -110,7 +110,7 @@ const PhonicGame: React.FC = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!quizId) {
-        setError("Quiz ID not found");
+        setError('Quiz ID not found');
         setLoading(false);
         return;
       }
@@ -119,7 +119,7 @@ const PhonicGame: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const response = await quizAPI.getQuestionsByQuizId(quizId);
+        const response = await quizAPI.getQuestionsByQuizId(quizId, language);
 
         if (response.success && response.data) {
           setApiQuestions(response.data);
@@ -135,7 +135,7 @@ const PhonicGame: React.FC = () => {
               letter: apiQuestion.text,
               sound: apiQuestion.text,
               word: apiQuestion.text,
-              image: "",
+              image: '',
               options: Object.values(apiQuestion.options), // Convert options object to array
               correctAnswer:
                 apiQuestion.options[
@@ -146,11 +146,11 @@ const PhonicGame: React.FC = () => {
 
           setQuestions(transformedQuestions);
         } else {
-          setError("Failed to fetch questions");
+          setError('Failed to fetch questions');
         }
       } catch (err) {
-        console.error("Error fetching questions:", err);
-        setError("Failed to load questions. Please try again.");
+        console.error('Error fetching questions:', err);
+        setError('Failed to load questions. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -162,7 +162,7 @@ const PhonicGame: React.FC = () => {
   useEffect(() => {
     if (questions.length > 0) {
       speak(
-        `${t("phonicsGame")}. ${t("instructions")}: ${t("selectCorrectAnswer")}`
+        `${t('phonicsGame')}. ${t('instructions')}: ${t('selectCorrectAnswer')}`
       );
       // Speak current question after a short delay
       setTimeout(() => {
@@ -183,7 +183,7 @@ const PhonicGame: React.FC = () => {
 
     const question = questions[currentQuestion];
     const instruction =
-      language === "hi"
+      language === 'hi'
         ? ` शब्द को सुनकर सही उत्तर चुने`
         : `Listen the letter and choose correct answer`;
     speak(instruction);
@@ -212,7 +212,7 @@ const PhonicGame: React.FC = () => {
       answers: [
         {
           questionId: currentApiQuestion._id,
-          selectedOption: selectedOptionKey || "A",
+          selectedOption: selectedOptionKey || 'A',
           isCorrect: isCorrect,
           timeTakenSec: 0,
         },
@@ -228,9 +228,9 @@ const PhonicGame: React.FC = () => {
 
     try {
       await quizAPI.submitQuizAttempt(attemptData);
-      console.log("Quiz attempt submitted successfully");
+      console.log('Quiz attempt submitted successfully');
     } catch (err) {
-      console.error("Error submitting quiz attempt:", err);
+      console.error('Error submitting quiz attempt:', err);
     }
   };
 
@@ -243,10 +243,10 @@ const PhonicGame: React.FC = () => {
     if (isCorrect) {
       setScore(score + 10);
       setCorrectCount(correctCount + 1);
-      speak(t("correct"));
+      speak(t('correct'));
     } else {
       setIncorrectCount(incorrectCount + 1);
-      speak(t("incorrect"));
+      speak(t('incorrect'));
       setWrongAnswerSelected(true);
     }
 
@@ -277,14 +277,14 @@ const PhonicGame: React.FC = () => {
     const newLevel = Math.min(currentLevel + 1, 5);
     const completed = newLevel >= 5;
 
-    updateProgress("phonics", {
+    updateProgress('phonics', {
       level: newLevel,
       score: Math.max(progress.phonics.score, finalScore),
       completed,
     });
 
     setGameCompleted(true);
-    speak(`${t("wellDone")}! ${t("score")}: ${finalScore}`);
+    speak(`${t('wellDone')}! ${t('score')}: ${finalScore}`);
   };
 
   const restartGame = () => {
@@ -312,12 +312,12 @@ const PhonicGame: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
             <p
               className={`text-lg ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {language === "hi"
-                ? "प्रश्न लोड हो रहे हैं..."
-                : "Loading questions..."}
+              {language === 'hi'
+                ? 'प्रश्न लोड हो रहे हैं...'
+                : 'Loading questions...'}
             </p>
           </div>
         </div>
@@ -334,20 +334,20 @@ const PhonicGame: React.FC = () => {
           <div className="text-center">
             <p
               className={`text-red-500 text-lg mb-4 ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
               {error}
             </p>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate('/dashboard')}
               className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {language === "hi"
-                ? "डैशबोर्ड पर वापस जाएं"
-                : "Back to Dashboard"}
+              {language === 'hi'
+                ? 'डैशबोर्ड पर वापस जाएं'
+                : 'Back to Dashboard'}
             </button>
           </div>
         </div>
@@ -364,22 +364,22 @@ const PhonicGame: React.FC = () => {
           <div className="text-center">
             <p
               className={`text-gray-500 text-lg mb-4 ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {language === "hi"
-                ? "कोई प्रश्न उपलब्ध नहीं है"
-                : "No questions available"}
+              {language === 'hi'
+                ? 'कोई प्रश्न उपलब्ध नहीं है'
+                : 'No questions available'}
             </p>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate('/dashboard')}
               className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {language === "hi"
-                ? "डैशबोर्ड पर वापस जाएं"
-                : "Back to Dashboard"}
+              {language === 'hi'
+                ? 'डैशबोर्ड पर वापस जाएं'
+                : 'Back to Dashboard'}
             </button>
           </div>
         </div>
@@ -398,34 +398,34 @@ const PhonicGame: React.FC = () => {
             </div>
             <h2
               className={`text-3xl font-bold text-gray-800 mb-4 ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {t("wellDone")}
+              {t('wellDone')}
             </h2>
             <p
               className={`text-lg text-gray-600 mb-6 ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {t("score")}: {score}
+              {t('score')}: {score}
             </p>
             <div className="flex flex-col space-y-4">
               <button
                 onClick={restartGame}
                 className={`px-6 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors duration-200 ${
-                  language === "hi" ? "font-hindi" : "font-english"
+                  language === 'hi' ? 'font-hindi' : 'font-english'
                 }`}
               >
-                {t("tryAgain")}
+                {t('tryAgain')}
               </button>
               <button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate('/dashboard')}
                 className={`px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 ${
-                  language === "hi" ? "font-hindi" : "font-english"
+                  language === 'hi' ? 'font-hindi' : 'font-english'
                 }`}
               >
-                {t("backToDashboard")}
+                {t('backToDashboard')}
               </button>
             </div>
           </div>
@@ -444,33 +444,33 @@ const PhonicGame: React.FC = () => {
         {/* Game Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate('/dashboard')}
             className="flex items-center space-x-2 px-4 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow duration-200"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
             <span
               className={`text-gray-600 font-medium ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {t("backToDashboard")}
+              {t('backToDashboard')}
             </span>
           </button>
 
           <div className="flex items-center space-x-4">
             <div
               className={`px-4 py-2 bg-primary-100 text-primary-700 rounded-full font-medium ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {t("level")}: {t(currentApiLevel)}
+              {t('level')}: {t(currentApiLevel)}
             </div>
             <div
               className={`px-4 py-2 bg-success-100 text-success-700 rounded-full font-medium ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {t("score")}: {score}
+              {t('score')}: {score}
             </div>
           </div>
         </div>
@@ -480,14 +480,14 @@ const PhonicGame: React.FC = () => {
           <div className="flex justify-between items-center mb-2">
             <span
               className={`text-sm text-gray-600 ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
-              {language === "hi" ? "प्रगति" : "Progress"}
+              {language === 'hi' ? 'प्रगति' : 'Progress'}
             </span>
             <span
               className={`text-sm text-gray-600 ${
-                language === "hi" ? "font-hindi" : "font-english"
+                language === 'hi' ? 'font-hindi' : 'font-english'
               }`}
             >
               {currentQuestion + 1} / {questions.length}
@@ -510,12 +510,12 @@ const PhonicGame: React.FC = () => {
             <div className="text-center mb-8">
               <h2
                 className={`text-2xl font-bold text-gray-800 mb-4 ${
-                  language === "hi" ? "font-hindi" : "font-english"
+                  language === 'hi' ? 'font-hindi' : 'font-english'
                 }`}
               >
-                {language === "hi"
+                {language === 'hi'
                   ? `शब्द को सुनकर सही उत्तर चुने:`
-                  : "Listen the letter and select the correct answer:"}
+                  : 'Listen the letter and select the correct answer:'}
               </h2>
 
               {/* Word with Sound Button */}
@@ -523,7 +523,7 @@ const PhonicGame: React.FC = () => {
                 <button
                   onClick={speakLetterClearly}
                   className="p-3 bg-secondary-100 hover:bg-secondary-200 rounded-full transition-colors duration-200"
-                  title={t("tapToHear")}
+                  title={t('tapToHear')}
                 >
                   <Volume2 className="h-6 w-6 text-secondary-600" />
                 </button>
@@ -541,16 +541,16 @@ const PhonicGame: React.FC = () => {
                     p-6 rounded-2xl font-bold text-2xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4
                     ${
                       showResult && option === question.correctAnswer
-                        ? "bg-success-500 text-white shadow-lg"
+                        ? 'bg-success-500 text-white shadow-lg'
                         : showResult &&
                           option === selectedAnswer &&
                           option !== question.correctAnswer
-                        ? "bg-error-500 text-white shadow-lg"
+                        ? 'bg-error-500 text-white shadow-lg'
                         : showResult
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 hover:from-primary-200 hover:to-primary-300 shadow-md hover:shadow-lg focus:ring-primary-300"
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 hover:from-primary-200 hover:to-primary-300 shadow-md hover:shadow-lg focus:ring-primary-300'
                     }
-                    ${language === "hi" ? "font-hindi" : "font-english"}
+                    ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
                 >
                   {option}
@@ -576,19 +576,19 @@ const PhonicGame: React.FC = () => {
                 <div
                   className={`inline-flex items-center space-x-2 px-6 py-3 rounded-full font-medium ${
                     selectedAnswer === question.correctAnswer
-                      ? "bg-success-100 text-success-700"
-                      : "bg-error-100 text-error-700"
-                  } ${language === "hi" ? "font-hindi" : "font-english"}`}
+                      ? 'bg-success-100 text-success-700'
+                      : 'bg-error-100 text-error-700'
+                  } ${language === 'hi' ? 'font-hindi' : 'font-english'}`}
                 >
                   {selectedAnswer === question.correctAnswer ? (
                     <>
                       <Award className="h-5 w-5" />
-                      <span>{t("correct")}!</span>
+                      <span>{t('correct')}!</span>
                     </>
                   ) : (
                     <>
                       <RefreshCw className="h-5 w-5" />
-                      <span>{t("incorrect")}</span>
+                      <span>{t('incorrect')}</span>
                     </>
                   )}
                 </div>
