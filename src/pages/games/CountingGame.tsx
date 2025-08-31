@@ -157,6 +157,8 @@ const CountingGame: React.FC = () => {
             }
           );
 
+          console.log(transformedQuestions, 'transformedQuestions');
+
           setQuestions(transformedQuestions);
         } else {
           setError(t('incorrect'));
