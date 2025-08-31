@@ -85,13 +85,19 @@ export interface UserMatrixResponse {
 export const authAPI = {
   // Register new user
   register: async (payload: RegisterPayload): Promise<AuthResponse> => {
-    const response = await axiosInstance.post<AuthResponse>('/auth/register', payload);
+    const response = await axiosInstance.post<AuthResponse>(
+      '/auth/register',
+      payload
+    );
     return response.data;
   },
 
   // Login user
   login: async (payload: LoginPayload): Promise<AuthResponse> => {
-    const response = await axiosInstance.post<AuthResponse>('/auth/login', payload);
+    const response = await axiosInstance.post<AuthResponse>(
+      '/auth/login',
+      payload
+    );
     return response.data;
   },
 
@@ -103,33 +109,43 @@ export const authAPI = {
 
   // Get current user profile
   getProfile: async (): Promise<ApiResponse<User>> => {
-    const response = await axiosInstance.get<ApiResponse<User>>('/auth/profile');
+    const response = await axiosInstance.get<ApiResponse<User>>(
+      '/auth/profile'
+    );
     return response.data;
   },
 
   // Update user profile
   updateProfile: async (payload: Partial<User>): Promise<ApiResponse<User>> => {
-    const response = await axiosInstance.put<ApiResponse<User>>('/auth/profile', payload);
+    const response = await axiosInstance.put<ApiResponse<User>>(
+      '/auth/profile',
+      payload
+    );
     return response.data;
-  }
+  },
 };
 
 // User API calls
 export const userAPI = {
   // Get user matrix data
   getUserMatrix: async (): Promise<UserMatrixResponse> => {
-    const response = await axiosInstance.get<UserMatrixResponse>('/users/matrix');
+    const response = await axiosInstance.get<UserMatrixResponse>(
+      '/users/matrix'
+    );
     return response.data;
-  }
+  },
 };
 
 // Game progress API calls (for future use)
 export const gameAPI = {
   // Save game progress
-  saveProgress: async (gameType: string, progress: any): Promise<ApiResponse> => {
+  saveProgress: async (
+    gameType: string,
+    progress: any
+  ): Promise<ApiResponse> => {
     const response = await axiosInstance.post<ApiResponse>('/games/progress', {
       gameType,
-      progress
+      progress,
     });
     return response.data;
   },
@@ -144,7 +160,7 @@ export const gameAPI = {
   getLeaderboard: async (): Promise<ApiResponse> => {
     const response = await axiosInstance.get<ApiResponse>('/games/leaderboard');
     return response.data;
-  }
+  },
 };
 
 // Stats API calls (for future use)
@@ -159,82 +175,71 @@ export const statsAPI = {
   updateUserStats: async (stats: any): Promise<ApiResponse> => {
     const response = await axiosInstance.put<ApiResponse>('/stats/user', stats);
     return response.data;
-  }
+  },
 };
 
 // Quiz API calls
+
 export const quizAPI = {
-  // Get questions by quiz ID
-  getQuestionsByQuizId: async (quizId: string): Promise<ApiResponse> => {
-    const response = await axiosInstance.get<ApiResponse>(`/questions/quiz/${quizId}`);
+  // Get questions by quiz ID with dynamic Accept-Language
+  getQuestionsByQuizId: async (
+    quizId: string,
+    language: string
+  ): Promise<ApiResponse> => {
+    const response = await axiosInstance.get<ApiResponse>(
+      `/questions/quiz/${quizId}`,
+      {
+        headers: {
+          Authorization: `Bearer YOUR_TOKEN_HERE`,
+          'Accept-Language': language === 'hi' ? 'hi' : 'en',
+        },
+      }
+    );
     return response.data;
   },
-
-  // Submit quiz attempt
-  submitQuizAttempt: async (attemptData: {
-    quizId: string;
-    quizSet: string;
-    answers: Array<{
-      questionId: string;
-      selectedOption: string;
-      isCorrect: boolean;
-      timeTakenSec: number;
-    }>;
-    score: number;
-    totalQuestions: number;
-    skippedCount: number;
-    correctCount: number;
-    incorrectCount: number;
-    timeTakenSec: number;
-    isCompleted: boolean;
-  }): Promise<ApiResponse> => {
-    const response = await axiosInstance.post<ApiResponse>('/quiz-attempts', attemptData);
-    return response.data;
-  },
-
-  // Get all quizzes
-  getQuizzes: async (): Promise<ApiResponse> => {
-    const response = await axiosInstance.get<ApiResponse>('/quizzes');
-    return response.data;
-  },
-
-  // Get games by quiz ID
-  getGamesByQuizId: async (quizId: string): Promise<ApiResponse> => {
-    const response = await axiosInstance.get<ApiResponse>(`/quizzes/quiz/${quizId}`);
-    return response.data;
-  }
 };
 
 // Error handling utility
-export const handleApiError = (error: any, language: 'en' | 'hi' = 'en'): string => {
+export const handleApiError = (
+  error: any,
+  language: 'en' | 'hi' = 'en'
+): string => {
   if (error.response?.data?.message) {
     return error.response.data.message;
   }
-  
+
   if (error.response?.status === 401) {
     return language === 'hi' ? 'अनधिकृत पहुंच' : 'Unauthorized access';
   }
-  
+
   if (error.response?.status === 404) {
     return language === 'hi' ? 'सेवा नहीं मिली' : 'Service not found';
   }
-  
+
   if (error.response?.status === 409) {
-    return language === 'hi' ? 'यह उपयोगकर्ता नाम पहले से मौजूद है' : 'Username already exists';
+    return language === 'hi'
+      ? 'यह उपयोगकर्ता नाम पहले से मौजूद है'
+      : 'Username already exists';
   }
-  
+
   if (error.response?.status === 400) {
-    return language === 'hi' ? 'अमान्य डेटा, कृपया जांच करें' : 'Invalid data, please check';
+    return language === 'hi'
+      ? 'अमान्य डेटा, कृपया जांच करें'
+      : 'Invalid data, please check';
   }
-  
+
   if (error.response?.status >= 500) {
-    return language === 'hi' ? 'सर्वर त्रुटि, कृपया बाद में पुनः प्रयास करें' : 'Server error, please try again later';
+    return language === 'hi'
+      ? 'सर्वर त्रुटि, कृपया बाद में पुनः प्रयास करें'
+      : 'Server error, please try again later';
   }
-  
+
   if (!error.response) {
-    return language === 'hi' ? 'नेटवर्क त्रुटि, कृपया पुनः प्रयास करें' : 'Network error, please try again';
+    return language === 'hi'
+      ? 'नेटवर्क त्रुटि, कृपया पुनः प्रयास करें'
+      : 'Network error, please try again';
   }
-  
+
   return language === 'hi' ? 'एक त्रुटि हुई' : 'An error occurred';
 };
 
@@ -244,5 +249,5 @@ export default {
   game: gameAPI,
   stats: statsAPI,
   quiz: quizAPI,
-  handleError: handleApiError
+  handleError: handleApiError,
 };
