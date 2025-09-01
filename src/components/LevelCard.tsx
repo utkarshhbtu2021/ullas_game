@@ -29,32 +29,73 @@ const LevelCard: React.FC<LevelCardProps> = ({
   const { speak } = useVoice();
 
   // Dynamic level configuration based on level name
-  const getLevelConfig = (levelName: string) => {
-    const levelLower = levelName.toLowerCase();
+  // const getLevelConfig = (levelName: string) => {
+  //   const levelLower = levelName.toLowerCase();
     
-    if (levelLower.includes('शुरुआती') || levelLower.includes('beginner')) {
-      return {
-        headerColor: 'bg-green-500',
-        icon: <Circle className="h-6 w-6" />,
-      };
-    } else if (levelLower.includes('मध्यम') || levelLower.includes('medium') || levelLower.includes('intermediate')) {
-      return {
-        headerColor: 'bg-blue-500',
-        icon: <CircleDot size={16} strokeWidth={3} className="h-6 w-6" />,
-      };
-    } else if (levelLower.includes('उन्नत') || levelLower.includes('advanced')) {
-      return {
-        headerColor: 'bg-purple-500',
-        icon: <Target className="h-6 w-6" />,
-      };
-    } else {
-      // Default configuration for unknown levels
-      return {
-        headerColor: 'bg-gray-500',
-        icon: <Circle className="h-6 w-6" />,
-      };
-    }
-  };
+  //   if (levelLower.includes('शुरुआती') || levelLower.includes('beginner')) {
+  //     return {
+  //       headerColor: 'bg-green-500',
+  //       icon: <Circle className="h-6 w-6" />,
+  //     };
+  //   } else if (levelLower.includes('मध्यम') || levelLower.includes('medium') || levelLower.includes('intermediate')) {
+  //     return {
+  //       headerColor: 'bg-blue-500',
+  //       icon: <CircleDot size={16} strokeWidth={3} className="h-6 w-6" />,
+  //     };
+  //   } else if (levelLower.includes('उन्नत') || levelLower.includes('advanced')) {
+  //     return {
+  //       headerColor: 'bg-purple-500',
+  //       icon: <Target className="h-6 w-6" />,
+  //     };
+  //   } else {
+  //     // Default configuration for unknown levels
+  //     return {
+  //       headerColor: 'bg-gray-500',
+  //       icon: <Circle className="h-6 w-6" />,
+  //     };
+  //   }
+  // };
+
+const getLevelConfig = (levelName: string) => {
+  const levelLower = levelName.toLowerCase();
+
+  if (
+    levelLower.includes('लेवल 1') ||
+    levelLower.includes('beginner') ||
+    levelLower.includes('level 1')
+  ) {
+    return {
+      headerColor: 'bg-green-500',
+      icon: <Circle className="h-6 w-6" />,
+    };
+  } else if (
+    levelLower.includes('लेवल 2') ||
+    levelLower.includes('medium') ||
+    levelLower.includes('intermediate') ||
+    levelLower.includes('level 2')
+  ) {
+    return {
+      headerColor: 'bg-blue-500',
+      icon: <CircleDot size={16} strokeWidth={3} className="h-6 w-6" />,
+    };
+  } else if (
+    levelLower.includes('लेवल 3') ||
+    levelLower.includes('advanced') ||
+    levelLower.includes('level 3')
+  ) {
+    return {
+      headerColor: 'bg-purple-500',
+      icon: <Target className="h-6 w-6" />,
+    };
+  } else {
+    // Default configuration for unknown levels
+    return {
+      headerColor: 'bg-gray-500',
+      icon: <Circle className="h-6 w-6" />,
+    };
+  }
+};
+
 
   const config = getLevelConfig(level);
 

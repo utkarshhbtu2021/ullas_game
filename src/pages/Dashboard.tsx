@@ -337,7 +337,7 @@ const Dashboard: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 progressCards">
                     {userMatrixData?.quizInfo &&
                     userMatrixData.quizInfo.length > 0 ? (
                       userMatrixData.quizInfo.map((quiz, index) => {

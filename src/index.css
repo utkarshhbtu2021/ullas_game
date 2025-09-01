@@ -63,8 +63,14 @@
 .backButton {
   max-height: 50px;
 }
-
-
+.progressCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.progressCards div  {
+  margin-top: 0px !important;
+}
 
 
 
