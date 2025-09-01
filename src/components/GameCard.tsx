@@ -25,13 +25,14 @@ const GameCard: React.FC<GameCardProps> = ({
   level = 1,
   score = 0,
   progress = 0,
-  quizId
+  quizId,
 }) => {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const { speak } = useVoice();
 
   const handleClick = () => {
+    console.log(isAvailable, path, quizId, 'jkdfknjfdjkfd');
     if (isAvailable) {
       speak(title);
       // If quizId is provided, pass it as state instead of URL parameter
@@ -58,9 +59,10 @@ const GameCard: React.FC<GameCardProps> = ({
       onClick={handleClick}
       className={`
         relative p-6 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4
-        ${isAvailable 
-          ? 'bg-gradient-to-br from-white to-primary-50 shadow-lg hover:shadow-xl border-2 border-primary-100 hover:border-primary-300 focus:ring-primary-500' 
-          : 'bg-gradient-to-br from-gray-100 to-gray-200 shadow-md border-2 border-gray-200 cursor-not-allowed opacity-75 focus:ring-gray-400'
+        ${
+          isAvailable
+            ? 'bg-gradient-to-br from-white to-primary-50 shadow-lg hover:shadow-xl border-2 border-primary-100 hover:border-primary-300 focus:ring-primary-500'
+            : 'bg-gradient-to-br from-gray-100 to-gray-200 shadow-md border-2 border-gray-200 cursor-not-allowed opacity-75 focus:ring-gray-400'
         }
       `}
       role="button"
@@ -92,38 +94,47 @@ const GameCard: React.FC<GameCardProps> = ({
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-bold text-success-600">{Math.round(progress)}%</span>
+              <span className="text-xs font-bold text-success-600">
+                {Math.round(progress)}%
+              </span>
             </div>
           </div>
         </div>
       )}
 
       {/* Game Icon */}
-      <div className={`
+      <div
+        className={`
         flex items-center justify-center w-16 h-16 rounded-2xl mb-4 mx-auto
-        ${isAvailable 
-          ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg' 
-          : 'bg-gray-400 text-gray-600'
+        ${
+          isAvailable
+            ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg'
+            : 'bg-gray-400 text-gray-600'
         }
-      `}>
+      `}
+      >
         {isAvailable ? icon : <Lock className="h-8 w-8" />}
       </div>
 
       {/* Game Title */}
-      <h3 className={`
+      <h3
+        className={`
         text-xl font-bold text-center mb-2
         ${language === 'hi' ? 'font-hindi' : 'font-english'}
         ${isAvailable ? 'text-gray-800' : 'text-gray-500'}
-      `}>
+      `}
+      >
         {title}
       </h3>
 
       {/* Game Description */}
-      <p className={`
+      <p
+        className={`
         text-sm text-center mb-4
         ${language === 'hi' ? 'font-hindi' : 'font-english'}
         ${isAvailable ? 'text-gray-600' : 'text-gray-400'}
-      `}>
+      `}
+      >
         {description}
       </p>
 
@@ -131,11 +142,17 @@ const GameCard: React.FC<GameCardProps> = ({
       {isAvailable && (
         <div className="flex justify-between items-center mb-4">
           <div className="text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{t('level')}</p>
-            <p className="text-lg font-bold text-primary-600">{getLevelDisplay()}</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">
+              {t('level')}
+            </p>
+            <p className="text-lg font-bold text-primary-600">
+              {getLevelDisplay()}
+            </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{t('score')}</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">
+              {t('score')}
+            </p>
             <p className="text-lg font-bold text-success-600">{score}</p>
           </div>
         </div>
@@ -143,17 +160,22 @@ const GameCard: React.FC<GameCardProps> = ({
 
       {/* Action Button */}
       <div className="flex justify-center">
-        <div className={`
+        <div
+          className={`
           flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium
-          ${isAvailable 
-            ? 'bg-primary-500 text-white' 
-            : 'bg-gray-300 text-gray-500'
+          ${
+            isAvailable
+              ? 'bg-primary-500 text-white'
+              : 'bg-gray-300 text-gray-500'
           }
-        `}>
+        `}
+        >
           {isAvailable ? (
             <>
               <Play className="h-4 w-4" />
-              <span className={language === 'hi' ? 'font-hindi' : 'font-english'}>
+              <span
+                className={language === 'hi' ? 'font-hindi' : 'font-english'}
+              >
                 {t('startGame')}
               </span>
             </>
@@ -166,10 +188,16 @@ const GameCard: React.FC<GameCardProps> = ({
       </div>
 
       {/* Hover Animation */}
-      <div className={`
+      <div
+        className={`
         absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300
-        ${isAvailable ? 'hover:opacity-100 bg-gradient-to-r from-primary-500/10 to-secondary-500/10' : ''}
-      `} />
+        ${
+          isAvailable
+            ? 'hover:opacity-100 bg-gradient-to-r from-primary-500/10 to-secondary-500/10'
+            : ''
+        }
+      `}
+      />
     </div>
   );
 };

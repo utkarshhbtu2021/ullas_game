@@ -1,5 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { VoiceProvider } from './contexts/VoiceContext';
 import { UserProvider } from './contexts/UserContext';
@@ -10,6 +15,8 @@ import Dashboard from './pages/Dashboard';
 import PhonicGame from './pages/games/PhonicGame';
 import ImageWordGame from './pages/games/ImageWordGame';
 import CountingGame from './pages/games/CountingGame';
+import WordPuzzleGame from './pages/games/WordPuzzleGame';
+import NumberOperationsGame from './pages/games/NumberOperationsGame';
 import ReadingGame from './pages/games/ReadingGame';
 import WritingGame from './pages/games/WritingGame';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -25,36 +32,70 @@ function App() {
                 <Route path="/" element={<Welcome />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/games/phonics" element={
-                  <ProtectedRoute>
-                    <PhonicGame />
-                  </ProtectedRoute>
-                } />
-                <Route path="/games/image-word" element={
-                  <ProtectedRoute>
-                    <ImageWordGame />
-                  </ProtectedRoute>
-                } />
-                <Route path="/games/counting" element={
-                  <ProtectedRoute>
-                    <CountingGame />
-                  </ProtectedRoute>
-                } />
-                <Route path="/games/reading" element={
-                  <ProtectedRoute>
-                    <ReadingGame />
-                  </ProtectedRoute>
-                } />
-                <Route path="/games/writing" element={
-                  <ProtectedRoute>
-                    <WritingGame />
-                  </ProtectedRoute>
-                } />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/phonics"
+                  element={
+                    <ProtectedRoute>
+                      <PhonicGame />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/image-word"
+                  element={
+                    <ProtectedRoute>
+                      <ImageWordGame />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/counting"
+                  element={
+                    <ProtectedRoute>
+                      <CountingGame />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/WordPuzzleGame"
+                  element={
+                    <ProtectedRoute>
+                      <WordPuzzleGame />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/NumberOperationsGame"
+                  element={
+                    <ProtectedRoute>
+                      <NumberOperationsGame />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/reading"
+                  element={
+                    <ProtectedRoute>
+                      <ReadingGame />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/games/writing"
+                  element={
+                    <ProtectedRoute>
+                      <WritingGame />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>

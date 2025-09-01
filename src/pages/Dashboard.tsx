@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   Trophy,
   Target,
@@ -8,15 +8,15 @@ import {
   Calculator,
   BookText,
   PenTool,
-} from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useVoice } from "../contexts/VoiceContext";
-import { useUser } from "../contexts/UserContext";
-import Header from "../components/Header";
-import GameCard from "../components/GameCard";
-import LevelCard from "../components/LevelCard";
-import axiosInstance from "../config/axiosInstance";
-import { userAPI, UserMatrix, QuizInfo } from "../services/apiService";
+} from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useVoice } from '../contexts/VoiceContext';
+import { useUser } from '../contexts/UserContext';
+import Header from '../components/Header';
+import GameCard from '../components/GameCard';
+import LevelCard from '../components/LevelCard';
+import axiosInstance from '../config/axiosInstance';
+import { userAPI, UserMatrix, QuizInfo } from '../services/apiService';
 
 // Define the level interface based on API response
 interface Level {
@@ -101,11 +101,11 @@ const Dashboard: React.FC = () => {
         if (response.success) {
           setUserMatrixData(response.data);
         } else {
-          setMatrixError("Failed to fetch user matrix data");
+          setMatrixError('Failed to fetch user matrix data');
         }
       } catch (err) {
-        console.error("Error fetching user matrix:", err);
-        setMatrixError("Failed to load user data. Please try again.");
+        console.error('Error fetching user matrix:', err);
+        setMatrixError('Failed to load user data. Please try again.');
       } finally {
         setMatrixLoading(false);
       }
@@ -132,20 +132,20 @@ const Dashboard: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const response = await axiosInstance.get<QuizResponse>("/quizzes", {
+        const response = await axiosInstance.get<QuizResponse>('/quizzes', {
           headers: {
-            "Accept-Language": language === "hi" ? "hi" : "en",
+            'Accept-Language': language === 'hi' ? 'hi' : 'en',
           },
         });
 
         if (response.data.success) {
           setLevels(response.data.data.items);
         } else {
-          setError("Failed to fetch levels");
+          setError('Failed to fetch levels');
         }
       } catch (err) {
-        console.error("Error fetching levels:", err);
-        setError("Failed to load levels. Please try again.");
+        console.error('Error fetching levels:', err);
+        setError('Failed to load levels. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
           `/quizzes/quiz/${selectedLevel._id}`,
           {
             headers: {
-              "Accept-Language": language === "hi" ? "hi" : "en",
+              'Accept-Language': language === 'hi' ? 'hi' : 'en',
             },
           }
         );
@@ -175,11 +175,11 @@ const Dashboard: React.FC = () => {
         if (response.data.success) {
           setGames(response.data.data);
         } else {
-          setGamesError("Failed to fetch games");
+          setGamesError('Failed to fetch games');
         }
       } catch (err) {
-        console.error("Error fetching games:", err);
-        setGamesError("Failed to load games. Please try again.");
+        console.error('Error fetching games:', err);
+        setGamesError('Failed to load games. Please try again.');
       } finally {
         setGamesLoading(false);
       }
@@ -212,7 +212,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!hasSpoken) {
       const welcome =
-        language === "hi"
+        language === 'hi'
           ? `नमस्ते, ${user?.name}! आज कुछ नया सीखने के लिए तैयार हैं?`
           : `Welcome, ${user?.name}! Ready to learn something new today?`;
       speak(welcome, true);
@@ -246,21 +246,21 @@ const Dashboard: React.FC = () => {
   const achievements = [
     {
       icon: <Trophy className="h-8 w-8 text-warning-500" />,
-      title: t("gamesCompleted"),
+      title: t('gamesCompleted'),
       value: userMatrixData?.totalCompletedQuiz || 0,
-      color: "warning",
+      color: 'warning',
     },
     {
       icon: <Target className="h-8 w-8 text-success-500" />,
-      title: t("totalScore"),
+      title: t('totalScore'),
       value: userMatrixData?.totalScore || 0,
-      color: "success",
+      color: 'success',
     },
     {
       icon: <Flame className="h-8 w-8 text-error-500" />,
-      title: t("streakDays"),
+      title: t('streakDays'),
       value: user?.streak, // Not provided in API, keeping default
-      color: "error",
+      color: 'error',
     },
   ];
 
@@ -276,22 +276,22 @@ const Dashboard: React.FC = () => {
               <h1
                 className={`
               text-4xl font-bold text-white mb-2
-              ${language === "hi" ? "font-hindi" : "font-english"}
+              ${language === 'hi' ? 'font-hindi' : 'font-english'}
             `}
               >
-                {language === "hi"
+                {language === 'hi'
                   ? `नमस्ते, ${user?.name}!`
                   : `Welcome, ${user?.name}!`}
               </h1>
               <p
                 className={`
               text-lg text-white
-              ${language === "hi" ? "font-hindi" : "font-english"}
+              ${language === 'hi' ? 'font-hindi' : 'font-english'}
             `}
               >
-                {language === "hi"
-                  ? "आज कुछ नया सीखने के लिए तैयार हैं?"
-                  : "Ready to learn something new today?"}
+                {language === 'hi'
+                  ? 'आज कुछ नया सीखने के लिए तैयार हैं?'
+                  : 'Ready to learn something new today?'}
               </p>
             </div>
             <div className="userSection__right"></div>
@@ -308,10 +308,10 @@ const Dashboard: React.FC = () => {
                   <h2
                     className={`
                     text-2xl font-bold text-gray-800
-                    ${language === "hi" ? "font-hindi" : "font-english"}
+                    ${language === 'hi' ? 'font-hindi' : 'font-english'}
                   `}
                   >
-                    {t("progress")}
+                    {t('progress')}
                   </h2>
                 </div>
 
@@ -320,17 +320,17 @@ const Dashboard: React.FC = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
                     <span
                       className={`ml-3 ${
-                        language === "hi" ? "font-hindi" : "font-english"
+                        language === 'hi' ? 'font-hindi' : 'font-english'
                       }`}
                     >
-                      {language === "hi" ? "लोड हो रहा है..." : "Loading..."}
+                      {language === 'hi' ? 'लोड हो रहा है...' : 'Loading...'}
                     </span>
                   </div>
                 ) : matrixError ? (
                   <div className="text-center py-8">
                     <p
                       className={`text-red-500 ${
-                        language === "hi" ? "font-hindi" : "font-english"
+                        language === 'hi' ? 'font-hindi' : 'font-english'
                       }`}
                     >
                       {matrixError}
@@ -345,18 +345,18 @@ const Dashboard: React.FC = () => {
                         const getQuizIcon = (quizName: string) => {
                           const nameLower = quizName.toLowerCase();
                           if (
-                            nameLower.includes("अक्षर") ||
-                            nameLower.includes("letter") ||
-                            nameLower.includes("ध्वनि") ||
-                            nameLower.includes("sound") ||
-                            nameLower.includes("मिलान")
+                            nameLower.includes('अक्षर') ||
+                            nameLower.includes('letter') ||
+                            nameLower.includes('ध्वनि') ||
+                            nameLower.includes('sound') ||
+                            nameLower.includes('मिलान')
                           ) {
                             return <Brain className="h-8 w-8" />;
                           } else if (
-                            nameLower.includes("count") ||
-                            nameLower.includes("गिनती") ||
-                            nameLower.includes("object") ||
-                            nameLower.includes("वस्तु")
+                            nameLower.includes('count') ||
+                            nameLower.includes('गिनती') ||
+                            nameLower.includes('object') ||
+                            nameLower.includes('वस्तु')
                           ) {
                             return <Calculator className="h-8 w-8" />;
                           } else {
@@ -378,9 +378,9 @@ const Dashboard: React.FC = () => {
                                   className={`
                               font-semibold text-gray-800
                               ${
-                                language === "hi"
-                                  ? "font-hindi"
-                                  : "font-english"
+                                language === 'hi'
+                                  ? 'font-hindi'
+                                  : 'font-english'
                               }
                             `}
                                 >
@@ -390,13 +390,13 @@ const Dashboard: React.FC = () => {
                                   className={`
                               text-sm text-gray-600
                               ${
-                                language === "hi"
-                                  ? "font-hindi"
-                                  : "font-english"
+                                language === 'hi'
+                                  ? 'font-hindi'
+                                  : 'font-english'
                               }
                             `}
                                 >
-                                  {language === "hi"
+                                  {language === 'hi'
                                     ? `स्तर: ${quiz.level} • स्कोर: ${quiz.score}`
                                     : `Level: ${quiz.level} • Score: ${quiz.score}`}
                                 </p>
@@ -431,12 +431,12 @@ const Dashboard: React.FC = () => {
                       <div className="text-center py-8">
                         <p
                           className={`text-gray-500 ${
-                            language === "hi" ? "font-hindi" : "font-english"
+                            language === 'hi' ? 'font-hindi' : 'font-english'
                           }`}
                         >
-                          {language === "hi"
-                            ? "कोई प्रगति डेटा उपलब्ध नहीं है"
-                            : "No progress data available"}
+                          {language === 'hi'
+                            ? 'कोई प्रगति डेटा उपलब्ध नहीं है'
+                            : 'No progress data available'}
                         </p>
                       </div>
                     )}
@@ -451,10 +451,10 @@ const Dashboard: React.FC = () => {
                 <h2
                   className={`
                   text-2xl font-bold text-gray-800 mb-6 text-center
-                  ${language === "hi" ? "font-hindi" : "font-english"}
+                  ${language === 'hi' ? 'font-hindi' : 'font-english'}
                 `}
                 >
-                  {t("yourAchievements")}
+                  {t('yourAchievements')}
                 </h2>
 
                 {matrixLoading ? (
@@ -473,7 +473,7 @@ const Dashboard: React.FC = () => {
                           <span
                             className={`
                             text-sm font-medium text-gray-700
-                            ${language === "hi" ? "font-hindi" : "font-english"}
+                            ${language === 'hi' ? 'font-hindi' : 'font-english'}
                           `}
                           >
                             {achievement.title}
@@ -483,19 +483,19 @@ const Dashboard: React.FC = () => {
                           className={`
                           text-2xl font-bold
                           ${
-                            achievement.color === "warning"
-                              ? "text-warning-600"
-                              : ""
+                            achievement.color === 'warning'
+                              ? 'text-warning-600'
+                              : ''
                           }
                           ${
-                            achievement.color === "success"
-                              ? "text-success-600"
-                              : ""
+                            achievement.color === 'success'
+                              ? 'text-success-600'
+                              : ''
                           }
                           ${
-                            achievement.color === "error"
-                              ? "text-error-600"
-                              : ""
+                            achievement.color === 'error'
+                              ? 'text-error-600'
+                              : ''
                           }
                         `}
                         >
@@ -517,7 +517,7 @@ const Dashboard: React.FC = () => {
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5 pointer-events-none rounded-3xl">
               <div className="grid grid-cols-8 gap-4 text-4xl text-gray-400 p-8">
-                {["अ", "आ", "इ", "ओ", "उ", "ए", "ऐ", "औ"].map((char, index) => (
+                {['अ', 'आ', 'इ', 'ओ', 'उ', 'ए', 'ऐ', 'औ'].map((char, index) => (
                   <div key={index} className="text-center">
                     {char}
                   </div>
@@ -528,20 +528,20 @@ const Dashboard: React.FC = () => {
               <h2
                 className={`
                 text-3xl font-bold text-center text-gray-800 mb-2
-                ${language === "hi" ? "font-hindi" : "font-english"}
+                ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}
               >
-                {language === "hi" ? "शिक्षा के खेल" : "Education Games"}
+                {language === 'hi' ? 'शिक्षा के खेल' : 'Education Games'}
               </h2>
               <p
                 className={`
                 text-lg text-center text-gray-600 mb-8
-                ${language === "hi" ? "font-hindi" : "font-english"}
+                ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}
               >
-                {language === "hi"
-                  ? "खेलना शुरू करने के लिए स्तर चुनें"
-                  : "Choose a level to start playing"}
+                {language === 'hi'
+                  ? 'खेलना शुरू करने के लिए स्तर चुनें'
+                  : 'Choose a level to start playing'}
               </p>
 
               {loading ? (
@@ -549,19 +549,19 @@ const Dashboard: React.FC = () => {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
                   <span
                     className={`ml-3 text-lg ${
-                      language === "hi" ? "font-hindi" : "font-english"
+                      language === 'hi' ? 'font-hindi' : 'font-english'
                     }`}
                   >
-                    {language === "hi"
-                      ? "स्तर लोड हो रहे हैं..."
-                      : "Loading levels..."}
+                    {language === 'hi'
+                      ? 'स्तर लोड हो रहे हैं...'
+                      : 'Loading levels...'}
                   </span>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
                   <p
                     className={`text-red-500 text-lg ${
-                      language === "hi" ? "font-hindi" : "font-english"
+                      language === 'hi' ? 'font-hindi' : 'font-english'
                     }`}
                   >
                     {error}
@@ -569,22 +569,22 @@ const Dashboard: React.FC = () => {
                   <button
                     onClick={() => window.location.reload()}
                     className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
-                      language === "hi" ? "font-hindi" : "font-english"
+                      language === 'hi' ? 'font-hindi' : 'font-english'
                     }`}
                   >
-                    {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
+                    {language === 'hi' ? 'पुनः प्रयास करें' : 'Try Again'}
                   </button>
                 </div>
               ) : levels.length === 0 ? (
                 <div className="text-center py-12">
                   <p
                     className={`text-gray-500 text-lg ${
-                      language === "hi" ? "font-hindi" : "font-english"
+                      language === 'hi' ? 'font-hindi' : 'font-english'
                     }`}
                   >
-                    {language === "hi"
-                      ? "कोई स्तर उपलब्ध नहीं है"
-                      : "No levels available"}
+                    {language === 'hi'
+                      ? 'कोई स्तर उपलब्ध नहीं है'
+                      : 'No levels available'}
                   </p>
                 </div>
               ) : (
@@ -609,13 +609,13 @@ const Dashboard: React.FC = () => {
         ) : (
           /* Games Section */
           <div className="mb-8">
-            <div className="gameListHead"> 
+            <div className="gameListHead">
               {/* Level Info */}
               <div className=" mb-8">
                 <h2
                   className={`
                 text-3xl font-bold text-gray-800 mb-2
-                ${language === "hi" ? "font-hindi" : "font-english"}
+                ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}
                 >
                   {selectedLevel?.name}
@@ -623,7 +623,7 @@ const Dashboard: React.FC = () => {
                 <p
                   className={`
                 text-lg text-gray-600
-                ${language === "hi" ? "font-hindi" : "font-english"}
+                ${language === 'hi' ? 'font-hindi' : 'font-english'}
               `}
                 >
                   {selectedLevel?.subtitle}
@@ -636,7 +636,7 @@ const Dashboard: React.FC = () => {
                   onClick={handleBackToLevels}
                   className={`
                   flex items-center space-x-2 px-4 py-2 bg-white hover:bg-white-200 text-black-700 rounded-lg transition-colors duration-200 backButton
-                  ${language === "hi" ? "font-hindi" : "font-english"}
+                  ${language === 'hi' ? 'font-hindi' : 'font-english'}
                 `}
                 >
                   <svg
@@ -653,7 +653,7 @@ const Dashboard: React.FC = () => {
                     />
                   </svg>
                   <span>
-                    {language === "hi" ? "स्तर चुनें" : "Choose Level"}
+                    {language === 'hi' ? 'स्तर चुनें' : 'Choose Level'}
                   </span>
                 </button>
               </div>
@@ -664,19 +664,19 @@ const Dashboard: React.FC = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
                 <span
                   className={`ml-3 text-lg ${
-                    language === "hi" ? "font-hindi" : "font-english"
+                    language === 'hi' ? 'font-hindi' : 'font-english'
                   }`}
                 >
-                  {language === "hi"
-                    ? "खेल लोड हो रहे हैं..."
-                    : "Loading games..."}
+                  {language === 'hi'
+                    ? 'खेल लोड हो रहे हैं...'
+                    : 'Loading games...'}
                 </span>
               </div>
             ) : gamesError ? (
               <div className="text-center py-12">
                 <p
                   className={`text-red-500 text-lg ${
-                    language === "hi" ? "font-hindi" : "font-english"
+                    language === 'hi' ? 'font-hindi' : 'font-english'
                   }`}
                 >
                   {gamesError}
@@ -684,22 +684,22 @@ const Dashboard: React.FC = () => {
                 <button
                   onClick={() => window.location.reload()}
                   className={`mt-4 px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors ${
-                    language === "hi" ? "font-hindi" : "font-english"
+                    language === 'hi' ? 'font-hindi' : 'font-english'
                   }`}
                 >
-                  {language === "hi" ? "पुनः प्रयास करें" : "Try Again"}
+                  {language === 'hi' ? 'पुनः प्रयास करें' : 'Try Again'}
                 </button>
               </div>
             ) : games.length === 0 ? (
               <div className="text-center py-12">
                 <p
                   className={`text-gray-500 text-lg ${
-                    language === "hi" ? "font-hindi" : "font-english"
+                    language === 'hi' ? 'font-hindi' : 'font-english'
                   }`}
                 >
-                  {language === "hi"
-                    ? "कोई खेल उपलब्ध नहीं है"
-                    : "No games available"}
+                  {language === 'hi'
+                    ? 'कोई खेल उपलब्ध नहीं है'
+                    : 'No games available'}
                 </p>
               </div>
             ) : (
@@ -711,32 +711,49 @@ const Dashboard: React.FC = () => {
                   // Map game name to appropriate icon and path
                   const getGameConfig = (gameName: string) => {
                     const nameLower = gameName.toLowerCase();
+                    console.log(nameLower, 'nameLower==>');
                     if (
-                      nameLower.includes("अक्षर") ||
-                      nameLower.includes("letter") ||
-                      nameLower.includes("ध्वनि") ||
-                      nameLower.includes("sound") ||
-                      nameLower.includes("मिलान")
+                      nameLower.includes('अक्षर') ||
+                      nameLower.includes('letter') ||
+                      nameLower.includes('ध्वनि') ||
+                      nameLower.includes('sound') ||
+                      nameLower.includes('मिलान')
                     ) {
                       return {
                         icon: <Brain className="h-8 w-8" />,
-                        path: "/games/phonics",
+                        path: '/games/phonics',
                       };
                     } else if (
-                      nameLower.includes("वस्तु") ||
-                      nameLower.includes("गिनना") ||
-                      nameLower.includes("count") ||
-                      nameLower.includes("object") ||
-                      nameLower.includes("गिनती")
+                      nameLower.includes('वस्तु') ||
+                      nameLower.includes('गिनना') ||
+                      nameLower.includes('count') ||
+                      nameLower.includes('object') ||
+                      nameLower.includes('गिनती')
                     ) {
                       return {
                         icon: <Calculator className="h-8 w-8" />,
-                        path: "/games/counting",
+                        path: '/games/counting',
+                      };
+                    } else if (
+                      nameLower.includes('word puzzle') ||
+                      nameLower.includes('शब्द पहेली')
+                    ) {
+                      return {
+                        icon: <Calculator className="h-8 w-8" />,
+                        path: '/games/WordPuzzleGame',
+                      };
+                    } else if (
+                      nameLower.includes('number operations') ||
+                      nameLower.includes('संख्या संचालन')
+                    ) {
+                      return {
+                        icon: <Calculator className="h-8 w-8" />,
+                        path: '/games/NumberOperationsGame',
                       };
                     } else {
                       return {
                         icon: <BookOpen className="h-8 w-8" />,
-                        path: "/games/generic",
+                        path: '/games/generic',
                       };
                     }
                   };
@@ -768,22 +785,22 @@ const Dashboard: React.FC = () => {
           <h3
             className={`
             text-2xl font-bold mb-4
-            ${language === "hi" ? "font-hindi" : "font-english"}
+            ${language === 'hi' ? 'font-hindi' : 'font-english'}
           `}
           >
-            {language === "hi"
-              ? "आपकी यात्रा जारी है!"
-              : "Your Learning Journey Continues!"}
+            {language === 'hi'
+              ? 'आपकी यात्रा जारी है!'
+              : 'Your Learning Journey Continues!'}
           </h3>
           <p
             className={`
             text-lg opacity-90
-            ${language === "hi" ? "font-hindi" : "font-english"}
+            ${language === 'hi' ? 'font-hindi' : 'font-english'}
           `}
           >
-            {language === "hi"
-              ? "हर दिन कुछ नया सीखें और अपने सपनों को साकार करें।"
-              : "Learn something new every day and achieve your dreams."}
+            {language === 'hi'
+              ? 'हर दिन कुछ नया सीखें और अपने सपनों को साकार करें।'
+              : 'Learn something new every day and achieve your dreams.'}
           </p>
         </div>
       </div>
