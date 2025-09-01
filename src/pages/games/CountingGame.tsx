@@ -120,13 +120,12 @@ const CountingGame: React.FC = () => {
           const transformedQuestions: CountingQuestion[] = response.data.map(
             (apiQuestion: ApiQuestion) => {
               // Extract emojis from text and create items array
-              const emojis = [...apiQuestion.text];
+              const emojis = apiQuestion?.text?.split(' ');
               const uniqueEmojis = [...new Set(emojis)];
               const items = Array.from(
                 { length: emojis.length },
                 () => uniqueEmojis[0]
               );
-
               // Convert options object to number array
               const optionsArray = Object.values(apiQuestion.options).map(
                 (option) => {
@@ -261,11 +260,11 @@ const CountingGame: React.FC = () => {
           timeTakenSec: 0,
         },
       ],
-      score: (isCorrect ? 10 : 0),
+      score: isCorrect ? 10 : 0,
       totalQuestions: questions.length,
       skippedCount: 0,
-      correctCount: (isCorrect ? 1 : 0),
-      incorrectCount: (isCorrect ? 0 : 1),
+      correctCount: isCorrect ? 1 : 0,
+      incorrectCount: isCorrect ? 0 : 1,
       timeTakenSec: 0,
       isCompleted: isLastQuestion,
     };
