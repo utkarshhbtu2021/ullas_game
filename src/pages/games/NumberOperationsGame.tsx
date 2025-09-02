@@ -59,12 +59,12 @@ const NumberOperationsGame: React.FC = () => {
 
     if (isCorrect) {
       setScore(score + 10);
-      speak(language === "hi" ? "सही!" : "Correct!");
+      speak(language === "hi" ? "सही जवाब है!" : "Correct!");
     } else {
       setWrongAnswerSelected(true);
       speak(
         language === "hi"
-          ? `गलत! सही उत्तर है ${questions[currentQuestion].answer}`
+          ? `गलत जवाब है! सही जवाब है ${questions[currentQuestion].answer}`
           : `Wrong! Correct answer is ${questions[currentQuestion].answer}`
       );
     }
@@ -298,14 +298,15 @@ const NumberOperationsGame: React.FC = () => {
                   {selectedAnswer === question.answer ? (
                     <>
                       <Award className="h-5 w-5" />
-                      <span>{t("correct")}! {question.answer}</span>
+                      <span>{t("correct")}!</span>
+                      {/* <span>{t("correct")}! {question.answer}</span> */}
                     </>
                   ) : (
                     <>
                       <RefreshCw className="h-5 w-5" />
                       <span>
                         {t("incorrect")} —{" "}
-                        {language === "hi" ? "सही उत्तर" : "Correct"}:{" "}
+                        {language === "hi" ? "सही जवाब है!" : "Correct"}:{" "}
                         {question.answer}
                       </span>
                     </>

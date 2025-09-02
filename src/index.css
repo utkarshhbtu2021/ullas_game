@@ -67,9 +67,14 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  max-height: 265px;
+  overflow-x: auto;
 }
 .progressCards div  {
   margin-top: 0px !important;
+}
+.gameStatusSection {
+  height: 100%;
 }
 
 
@@ -127,9 +132,17 @@
         height: 20px;
     }
 }
-@media screen and (max-width: 600px) {
-    
-}
+
 @media screen and (max-width: 480px) {
      
+}
+@media screen and (max-width: 1399px) {
+  .progressCards { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+@media screen and (max-width: 567px) {
+    .progressCards { 
+      grid-template-columns: repeat(1, 1fr); 
+    }
 }

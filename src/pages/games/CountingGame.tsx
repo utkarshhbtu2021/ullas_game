@@ -286,7 +286,8 @@ const CountingGame: React.FC = () => {
     if (isCorrect) {
       setScore(score + 10);
       setCorrectCount(correctCount + 1);
-      speak(`${t('correct')}! ${answer}`);
+      speak(`${t('correct')}!`);
+      // speak(`${t('correct')}! ${answer}`);
     } else {
       setIncorrectCount(incorrectCount + 1);
       speak(
@@ -647,7 +648,8 @@ const CountingGame: React.FC = () => {
                     <>
                       <Award className="h-5 w-5" />
                       <span>
-                        {t('correct')}! {selectedAnswer}
+                        {t('correct')}!
+                        {/* {t('correct')}! {selectedAnswer} */}
                       </span>
                     </>
                   ) : (

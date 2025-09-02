@@ -100,7 +100,7 @@ const WordPuzzleGame: React.FC = () => {
         setShowResult(true);
         speak(
           language === "hi"
-            ? `सही! ${question.target}`
+            ? `सही जवाब है! ${question.target}`
             : `Correct! ${question.target}`
         );
 
@@ -115,7 +115,7 @@ const WordPuzzleGame: React.FC = () => {
       setShowResult(true);
       speak(
         language === "hi"
-          ? `गलत! सही उत्तर है ${question.target}`
+          ? `गलत जवाब है! सही जवाब है ${question.target}`
           : `Wrong! The correct answer is ${question.target}`
       );
 
@@ -345,7 +345,7 @@ const WordPuzzleGame: React.FC = () => {
                       <RefreshCw className="h-5 w-5" />
                       <span>
                         {t("incorrect")} —{" "}
-                        {language === "hi" ? "सही उत्तर" : "Correct"}: {question.target}
+                        {language === "hi" ? "सही जवाब है!" : "Correct"}: {question.target}
                       </span>
                     </>
                   )}

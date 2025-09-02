@@ -303,7 +303,7 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Progress Section - Takes 2 columns */}
             <div className="lg:col-span-2 blackBorder">
-              <div className="bg-white rounded-3xl shadow-lg p-6">
+              <div className="bg-white rounded-3xl shadow-lg p-6 gameStatusSection">
                 <div className="flex justify-between items-center mb-6">
                   <h2
                     className={`
@@ -447,7 +447,7 @@ const Dashboard: React.FC = () => {
 
             {/* Achievements Section - Takes 1 column */}
             <div className="lg:col-span-1 blackBorder">
-              <div className="bg-white rounded-3xl shadow-lg p-6">
+              <div className="bg-white rounded-3xl shadow-lg p-6 gameStatusSection">
                 <h2
                   className={`
                   text-2xl font-bold text-gray-800 mb-6 text-center
@@ -635,7 +635,7 @@ const Dashboard: React.FC = () => {
                 <button
                   onClick={handleBackToLevels}
                   className={`
-                  flex items-center space-x-2 px-4 py-2 bg-white hover:bg-white-200 text-black-700 rounded-lg transition-colors duration-200 backButton
+                  flex items-center space-x-2 px-4 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow duration-200 backButton
                   ${language === 'hi' ? 'font-hindi' : 'font-english'}
                 `}
                 >
@@ -653,7 +653,7 @@ const Dashboard: React.FC = () => {
                     />
                   </svg>
                   <span>
-                    {language === 'hi' ? 'स्तर चुनें' : 'Choose Level'}
+                    {language === 'hi' ? 'लेवल चुनें' : 'Choose Level'}
                   </span>
                 </button>
               </div>

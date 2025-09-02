@@ -246,7 +246,10 @@ const PhonicGame: React.FC = () => {
       speak(t('correct'));
     } else {
       setIncorrectCount(incorrectCount + 1);
-      speak(t('incorrect'));
+      // speak(t('incorrect'));
+      speak(
+        `${t('incorrect')} ${t('correct')} ${questions[currentQuestion].correctAnswer}`
+      );
       setWrongAnswerSelected(true);
     }
 
@@ -588,7 +591,7 @@ const PhonicGame: React.FC = () => {
                   ) : (
                     <>
                       <RefreshCw className="h-5 w-5" />
-                      <span>{t('incorrect')}</span>
+                      <span>{t('incorrect')} - {t('correct')}: {question.correctAnswer}</span>
                     </>
                   )}
                 </div>

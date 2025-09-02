@@ -121,18 +121,18 @@ const content: Record<Language, Content> = {
     nextLevel: 'अगला स्तर',
     tryAgain: 'फिर कोशिश करें',
     wellDone: 'बहुत अच्छा!',
-    correct: 'सही जवाब!',
-    incorrect: 'गलत जवाब',
+    correct: 'सही जवाब है!',
+    incorrect: 'गलत जवाब है',
     score: 'स्कोर',
-    level: 'स्तर',
+    level: 'लेवल',
     selectCorrectAnswer: 'सही उत्तर चुनें',
     tapToHear: 'सुनने के लिए टैप करें',
     instructions: 'निर्देश',
     backToDashboard: 'डैशबोर्ड पर वापस',
     languageChanged: 'भाषा बदल गई',
-    beginner: 'शुरुआती',
-    intermediate: 'मध्यम',
-    advanced: 'उन्नत'
+    beginner: 'लेवल 1',
+    intermediate: 'लेवल 2',
+    advanced: 'लेवल 3'
   }
 };
 
